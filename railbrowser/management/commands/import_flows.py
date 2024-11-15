@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e}"))
-
+                print(f'line {line_number}')
         self.stdout.write(self.style.SUCCESS("Data import completed successfully."))
 
     def _import_flow_record(self, line, station_type, cluster_type):
@@ -126,9 +126,6 @@ class Command(BaseCommand):
         except TicketType.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"TicketType with code {ticket_code} not found. Skipping fare record."))
         
-        
-        
-        
         fare_data = {
             'ticket_code': line[9:12].strip(),
             'fare': int(line[12:20].strip()),  # Fare in pence
@@ -144,7 +141,7 @@ class Command(BaseCommand):
             # Save or update Fare record
             fare, created = Fare.objects.update_or_create(
                 flow=flow,
-                ticket_code=fare_data['ticket_code'],
+                ticket_type=fare_data['ticket_code'],
                 defaults=fare_data
             )
 

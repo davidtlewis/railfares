@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Fares</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Find Fares</h1>
+    <form method="get" action="">
+        {{ form.as_p }}
+        <button type="submit">Search</button>
+    </form>
+
+    {% if fares %}
+        <h2>Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticket Type</th>
+                    <th>Fare</th>
+                    <th>Restriction</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fare in fares %}
+                    <tr>
+                        <td>{{ fare.ticket_type.description }}</td>
+                        <td>{{ fare.fare|floatformat:2 }}</td>
+                        <td>{{ fare.restriction_code|default:"None" }}</td>
+                        <td>{{ fare.flow }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif fares is not None %}
+        <p>No fares found for the given origin and destination.</p>
+    {% endif %}
+</body>
+</html>
