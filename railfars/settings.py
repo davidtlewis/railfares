@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3otzd+4p1l%973ix86m1p7z4zr^0!@clg^)nd^wjuc6-rw)4e*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -76,13 +76,46 @@ WSGI_APPLICATION = 'railfars.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'rail',
+#         'USER': 'django',
+#         'PASSWORD': 'django',
+#         'HOST': '127.0.0.1',
+#         'PORT': '3301',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'railfares',
+        'USER': 'postgres',
+        'PASSWORD': 'Mervansep123',
+        'HOST': '192.168.1.211',
+        'PORT': '5432'
     }
 }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'fares',
+#         'USER': 'fares',
+#         'PASSWORD': 'PASSWORD',
+#         'HOST': '192.168.1.XXX',
+#         'PORT': '3306',
+        
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

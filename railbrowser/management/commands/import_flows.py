@@ -36,7 +36,8 @@ class Command(BaseCommand):
                 try:
                     record_type = line[1:2].strip()
                     if record_type == 'F':
-                        self._import_flow_record(line, station_type, cluster_type)
+                        pass
+                        #self._import_flow_record(line, station_type, cluster_type)
                     elif record_type == 'T':
                         self._import_fare_record(line)
                     else:
@@ -92,7 +93,6 @@ class Command(BaseCommand):
     def _import_fare_record(self, line):
         """Parses and saves a Fare record linked to a Flow"""
         fare_data = {
-            # 'update_marker': line[0:1].strip(),
             'fare': int(line[12:20].strip()),  # Fare in pence
             'restriction_code': line[20:22].strip(),
         }
