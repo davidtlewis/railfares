@@ -22,13 +22,13 @@ class TicketType(models.Model):
 
 class Flow(models.Model):
     # Generic Foreign Key setup for Origin
-    origin_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="origin_flows")
-    origin_object_id = models.PositiveIntegerField()
+    origin_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="origin_flows", null=True)
+    origin_object_id = models.PositiveIntegerField(null=True)
     origin = GenericForeignKey('origin_content_type', 'origin_object_id')
     
     # Generic Foreign Key setup for Destination
-    destination_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="destination_flows")
-    destination_object_id = models.PositiveIntegerField()
+    destination_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="destination_flows", null=True)
+    destination_object_id = models.PositiveIntegerField(null=True)
     destination = GenericForeignKey('destination_content_type', 'destination_object_id')
     
     # Other fields as before
