@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Fares</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Find Fares2</h1>
+
+    <form method="get" action="">
+        {{ form.as_p }}
+        <button type="submit">Search</button>
+    </form>
+
+    {% if fares_with_resolved_flows %}
+    <h2>Search Context</h2>
+    <p><strong>Origin Station:</strong> {{ origin_station }}</p>
+    <p><strong>Origin Clusters:</strong>
+        {% for cluster in origin_clusters %}
+        {{ cluster }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+    <p><strong>Destination Station:</strong> {{ destination_station }}</p>
+    <p><strong>Destination Clusters:</strong>
+        {% for cluster in destination_clusters %}
+        {{ cluster }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+
+    <h2>Results</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Origin</th>
+                <th>Destination</th>
+                <th>Ticket Type</th>
+                <th>Fare</th>
+                <th>Restriction</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in fares_with_resolved_flows %}
+            <tr>
+                <td>{{ item.origin }}</td>
+                <td>{{ item.destination }}</td>
+                <td>{{ item.fare.ticket_type.description }}</td>
+                <td>{{ item.fare.fare|floatformat:2 }}</td>
+                <td>{{ item.fare.restriction_code|default:"None" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% elif fares_with_resolved_flows is not None %}
+    <p>No fares found for the given origin and destination.</p>
+    {% endif %}
+</body>
+
+</html>

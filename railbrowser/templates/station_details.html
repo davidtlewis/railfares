@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Details</title>
+</head>
+
+<body>
+    <h1>Station Details</h1>
+
+    <p><strong>Station Code:</strong> {{ station.nlc_code }}</p>
+    <p><strong>Station Name:</strong> {{ station.name }}</p>
+
+    <h2>Clusters</h2>
+    {% if clusters %}
+    <ul>
+        {% for cluster in clusters %}
+        <li>{{ cluster.name }} ({{ cluster.cluster_id }})</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>This station does not belong to any clusters.</p>
+    {% endif %}
+</body>
+
+</html>

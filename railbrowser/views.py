@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import Fare, Flow, Station, StationCluster
-from .forms import FindFaresForm
+from .forms import FindFaresForm, ClusterSearchForm, StationSearchForm
 from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 def find_fares(request):
     # Extract the origin and destination from query parameters
@@ -63,6 +65,10 @@ def find_fares_view_v1(request):
 def find_fares_view(request):
     form = FindFaresForm(request.GET or None)
     fares = None  # Initialize fares to None
+    origin_station = None
+    destination_station = None
+    origin_clusters = None
+    destination_clusters= None
 
     if form.is_valid():  # Validate form submission
         origin_code = form.cleaned_data['origin']
@@ -107,4 +113,155 @@ def find_fares_view(request):
         except Station.DoesNotExist:
             form.add_error(None, "One or both station codes are invalid.")
 
-    return render(request, 'find_fares.html', {'form': form, 'fares': fares})
+    return render(request, 'find_fares.html', {
+        'form': form,
+        'fares': fares,
+        'origin_station': origin_station,
+        'destination_station': destination_station,
+        'origin_clusters': origin_clusters,
+        'destination_clusters': destination_clusters,
+
+        })
+
+
+
+def find_fares_view2(request):
+    form = FindFaresForm(request.GET or None)
+    fares_with_resolved_flows = None  # Initialize variable to hold fares with origin/destination details
+
+    origin_station = None
+    origin_clusters = []
+    destination_station = None
+    destination_clusters = []
+
+    if form.is_valid():  # Validate form submission
+        origin_code = form.cleaned_data['origin']
+        destination_code = form.cleaned_data['destination']
+
+        try:
+            # Fetch origin and destination stations
+            origin_station = Station.objects.get(nlc_code=origin_code)
+            destination_station = Station.objects.get(nlc_code=destination_code)
+
+            # Get clusters containing the origin and destination stations
+            # origin_clusters = StationCluster.objects.filter(stations=origin_station)
+            origin_clusters = StationCluster.objects.filter(stations__id=origin_station.id)
+            destination_clusters = StationCluster.objects.filter(stations__id=destination_station.id)
+
+            # Get ContentType for Station and StationCluster models
+            station_type = ContentType.objects.get_for_model(Station)
+            cluster_type = ContentType.objects.get_for_model(StationCluster)
+
+            # Combine ContentType and object_id for both stations and clusters
+            origin_criteria = [
+                {'content_type': station_type, 'object_id': origin_station.id}
+            ] + [
+                {'content_type': cluster_type, 'object_id': cluster.id}
+                for cluster in origin_clusters
+            ]
+
+            destination_criteria = [
+                {'content_type': station_type, 'object_id': destination_station.id}
+            ] + [
+                {'content_type': cluster_type, 'object_id': cluster.id}
+                for cluster in destination_clusters
+            ]
+
+            # Query for fares matching the combined criteria
+            fares = Fare.objects.filter(
+                flow__origin_content_type__in=[c['content_type'] for c in origin_criteria],
+                flow__origin_object_id__in=[c['object_id'] for c in origin_criteria],
+                flow__destination_content_type__in=[c['content_type'] for c in destination_criteria],
+                flow__destination_object_id__in=[c['object_id'] for c in destination_criteria],
+            ).select_related('flow', 'ticket_type')
+
+            # Add resolved origin and destination to each fare
+            fares_with_resolved_flows = []
+            for fare in fares:
+                flow = fare.flow
+                fares_with_resolved_flows.append({
+                    'fare': fare,
+                    'origin': _resolve_generic(flow.origin_content_type, flow.origin_object_id),
+                    'destination': _resolve_generic(flow.destination_content_type, flow.destination_object_id),
+                })
+
+        except Station.DoesNotExist:
+            form.add_error(None, "One or both station codes are invalid.")
+
+    return render(request, 'find_fares2.html', {
+        'form': form,
+        'fares_with_resolved_flows': fares_with_resolved_flows,
+        'origin_station': origin_station,
+        'origin_clusters': origin_clusters,
+        'destination_station': destination_station,
+        'destination_clusters': destination_clusters,
+    })
+
+def _resolve_generic(content_type, object_id):
+    """Resolve a GenericForeignKey to its object"""
+    if content_type and object_id:
+        return content_type.get_object_for_this_type(id=object_id)
+    return None
+
+def cluster_details_view(request, cluster_id):
+    # Get the cluster or return a 404 if not found
+    cluster = get_object_or_404(StationCluster, cluster_id=cluster_id)
+
+    # Retrieve all stations in the cluster
+    stations = cluster.stations.all()
+
+    return render(request, "cluster_details.html", {
+        "cluster": cluster,
+        "stations": stations,
+    })
+
+
+
+def cluster_search_view(request):
+    form = ClusterSearchForm(request.GET or None)
+    clusters = []
+
+    if form.is_valid():
+        search_query = form.cleaned_data.get("search_query", "").strip()
+        if search_query:
+            # Search by cluster_id or name (case-insensitive)
+            clusters = StationCluster.objects.filter(
+                Q(cluster_id__icontains=search_query) 
+            )
+
+    return render(request, "cluster_search.html", {
+        "form": form,
+        "clusters": clusters,
+    })
+
+
+
+def station_details_view(request, nlc_code):
+    # Get the station or return a 404 if not found
+    station = get_object_or_404(Station, nlc_code=nlc_code)
+
+    # Get the clusters the station belongs to
+    clusters = station.clusters.all()  # Assuming a `related_name="clusters"` on the ManyToManyField
+
+    return render(request, "station_details.html", {
+        "station": station,
+        "clusters": clusters,
+    })
+
+
+def station_search_view(request):
+    form = StationSearchForm(request.GET or None)
+    stations = []  # Initialize stations as an empty list
+
+    if form.is_valid():
+        search_query = form.cleaned_data.get("search_query", "").strip()
+        if search_query:
+            # Search by nlc_code or name (case-insensitive)
+            stations = Station.objects.filter(
+                Q(nlc_code__icontains=search_query) | Q(name__icontains=search_query)
+            )
+
+    return render(request, "station_search.html", {
+        "form": form,
+        "stations": stations,
+    })
