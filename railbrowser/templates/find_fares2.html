@@ -59,6 +59,7 @@
     <table>
         <thead>
             <tr>
+                <th>flow</th>
                 <th>Origin</th>
                 <th>Destination</th>
                 <th>Ticket Type</th>
@@ -69,6 +70,7 @@
         <tbody>
             {% for item in fares_with_resolved_flows %}
             <tr>
+                <td>{{ item.flow.flow_id}}</td>
                 <td>{{ item.origin }}</td>
                 <td>{{ item.destination }}</td>
                 <td>{{ item.fare.ticket_type.description }}</td>

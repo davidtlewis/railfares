@@ -1,10 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from .models import Fare, Flow, Station, StationCluster
-from .forms import FindFaresForm, ClusterSearchForm, StationSearchForm
+from .forms import FindFaresForm, ClusterSearchForm, StationSearchForm, FlowSearchForm
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.db.models import Prefetch
 
 def find_fares(request):
     # Extract the origin and destination from query parameters
@@ -167,6 +168,16 @@ def find_fares_view2(request):
                 for cluster in destination_clusters
             ]
 
+
+            # #get the flows matching the source and destination
+            # flows = Flow.objects.filter(
+            #     origin_content_type__in=[c['content_type'] for c in origin_criteria],
+            #     origin_object_id__in=[c['object_id'] for c in origin_criteria],
+            #     destination_content_type__in=[c['content_type'] for c in destination_criteria],
+            #     destination_object_id__in=[c['object_id'] for c in destination_criteria],
+            #     ).prefetch_related('fare_set').all()
+         
+
             # Query for fares matching the combined criteria
             fares = Fare.objects.filter(
                 flow__origin_content_type__in=[c['content_type'] for c in origin_criteria],
@@ -181,6 +192,7 @@ def find_fares_view2(request):
                 flow = fare.flow
                 fares_with_resolved_flows.append({
                     'fare': fare,
+                    'flow':flow,
                     'origin': _resolve_generic(flow.origin_content_type, flow.origin_object_id),
                     'destination': _resolve_generic(flow.destination_content_type, flow.destination_object_id),
                 })
@@ -265,3 +277,20 @@ def station_search_view(request):
         "form": form,
         "stations": stations,
     })
+
+
+
+def flow_detail_view(request, flow_id):
+    flow = get_object_or_404(Flow, flow_id=flow_id)
+    return render(request, 'flow_detail.html', {'flow': flow})
+
+def flow_search_view(request):
+    if request.method == 'POST':
+        form = FlowSearchForm(request.POST)
+        if form.is_valid():
+            flow_id = form.cleaned_data['flow_id']
+            return redirect('flow_detail', flow_id=flow_id)
+    else:
+        form = FlowSearchForm()
+    
+    return render(request, 'flow_search.html', {'form': form})

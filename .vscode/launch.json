@@ -9,8 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "args": [
-                "import_fares",
-                "../raildata/sample_fares10.FFL"
+                "runserver",
             ],
             "django": true,
             "autoStartBrowser": false,

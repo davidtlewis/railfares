@@ -15,6 +15,9 @@ class FindFaresForm(forms.Form):
     )
 
 
+class FlowSearchForm(forms.Form):
+    flow_id = forms.IntegerField(label='Flow ID', required=True)
+
 class ClusterSearchForm(forms.Form):
     search_query = forms.CharField(
         max_length=100,
