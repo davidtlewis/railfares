@@ -43,7 +43,7 @@ class Command(BaseCommand):
                         if flow:
                             flows_to_create.append(flow)
                             batch_counter = batch_counter + 1
-                            if batch_counter >= 2000:
+                            if batch_counter >= 4000:
                                 Flow.objects.bulk_create(flows_to_create)
                                 self.stdout.write(
                                     self.style.SUCCESS(f"Imported {len(flows_to_create)} new flow records.")
@@ -56,9 +56,9 @@ class Command(BaseCommand):
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e}"))
 
-                # Perform bulk_create for new flows
+                # Perform bulk_create for last few  flows
             if flows_to_create:
-                Flow.objects.bulk_create(flows_to_create, batch_size=1000)
+                Flow.objects.bulk_create(flows_to_create)
                 self.stdout.write(
                     self.style.SUCCESS(f"Imported {len(flows_to_create)} new flow records.")
                 )
