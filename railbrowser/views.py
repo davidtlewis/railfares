@@ -6,6 +6,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.db.models import Prefetch
+from django.db import connection
+
+
 
 def find_fares(request):
     # Extract the origin and destination from query parameters
@@ -38,7 +41,6 @@ def find_fares(request):
 
     except Station.DoesNotExist:
         return JsonResponse({'error': 'One or both station codes are invalid'}, status=404)
-
 
 
 def find_fares_view_v1(request):
@@ -125,7 +127,6 @@ def find_fares_view(request):
         })
 
 
-
 def find_fares_view2(request):
     form = FindFaresForm(request.GET or None)
     fares_with_resolved_flows = None  # Initialize variable to hold fares with origin/destination details
@@ -168,16 +169,6 @@ def find_fares_view2(request):
                 for cluster in destination_clusters
             ]
 
-
-            # #get the flows matching the source and destination
-            # flows = Flow.objects.filter(
-            #     origin_content_type__in=[c['content_type'] for c in origin_criteria],
-            #     origin_object_id__in=[c['object_id'] for c in origin_criteria],
-            #     destination_content_type__in=[c['content_type'] for c in destination_criteria],
-            #     destination_object_id__in=[c['object_id'] for c in destination_criteria],
-            #     ).prefetch_related('fare_set').all()
-         
-
             # Query for fares matching the combined criteria
             fares = Fare.objects.filter(
                 flow__origin_content_type__in=[c['content_type'] for c in origin_criteria],
@@ -192,7 +183,7 @@ def find_fares_view2(request):
                 flow = fare.flow
                 fares_with_resolved_flows.append({
                     'fare': fare,
-                    'flow':flow,
+                    'flow': flow,
                     'origin': _resolve_generic(flow.origin_content_type, flow.origin_object_id),
                     'destination': _resolve_generic(flow.destination_content_type, flow.destination_object_id),
                 })
@@ -207,6 +198,70 @@ def find_fares_view2(request):
         'origin_clusters': origin_clusters,
         'destination_station': destination_station,
         'destination_clusters': destination_clusters,
+    })
+
+
+def find_fares_view3(request):
+    form = FindFaresForm(request.GET or None)
+    fares_with_resolved_flows = []  # Initialize variable to hold fares with origin/destination details
+
+    if form.is_valid():
+        origin_code = form.cleaned_data['origin']
+        destination_code = form.cleaned_data['destination']
+        print(f"Origin Code: {origin_code}, Destination Code: {destination_code}")
+
+        try:
+            # Fetch origin and destination stations
+            origin_station = Station.objects.get(nlc_code=origin_code)
+            destination_station = Station.objects.get(nlc_code=destination_code)
+
+            # Fetch clusters containing the origin and destination stations
+            origin_clusters = StationCluster.objects.filter(stations=origin_station)
+            destination_clusters = StationCluster.objects.filter(stations=destination_station)
+
+            # Get ContentType for Station and StationCluster models
+            station_type = ContentType.objects.get_for_model(Station)
+            cluster_type = ContentType.objects.get_for_model(StationCluster)
+
+            # Restrict the query to include only valid origin and destination pairs
+            cluster_origin_ids = list(origin_clusters.values_list('id', flat=True))
+            cluster_destination_ids = list(destination_clusters.values_list('id', flat=True))
+
+            print(f"Cluster Origin IDs: {cluster_origin_ids}") 
+            print(f"Cluster Destination IDs: {cluster_destination_ids}") 
+
+            # Query for flows matching the combined criteria
+            flows = Flow.objects.filter(
+                Q(origin_content_type=station_type, origin_object_id=origin_station.id) |
+                Q(origin_content_type=cluster_type, origin_object_id__in=cluster_origin_ids),
+                Q(destination_content_type=station_type, destination_object_id=destination_station.id) |
+                Q(destination_content_type=cluster_type, destination_object_id__in=cluster_destination_ids)
+            )
+
+            # Debug: Print flows retrieved
+            print(f'Flows: {list(flows.values_list("id", flat=True))}')
+
+            # Query fares for these flows
+            fares = Fare.objects.filter(flow__in=flows).select_related('flow', 'ticket_type')
+
+            # Add resolved origin and destination to each fare
+            for fare in fares:
+                flow = fare.flow
+                fares_with_resolved_flows.append({
+                    'fare': fare,
+                    'origin': _resolve_generic(flow.origin_content_type, flow.origin_object_id),
+                    'destination': _resolve_generic(flow.destination_content_type, flow.destination_object_id),
+                })
+
+            print(f'Length of fares: {len(fares)}') 
+            print(f'Length of fares_with_resolved_flows: {len(fares_with_resolved_flows)}')
+
+        except Station.DoesNotExist:
+            form.add_error(None, "One or both station codes are invalid.")
+
+    return render(request, 'find_fares3.html', {
+        'form': form,
+        'fares_with_resolved_flows': fares_with_resolved_flows,
     })
 
 def _resolve_generic(content_type, object_id):
@@ -227,8 +282,6 @@ def cluster_details_view(request, cluster_id):
         "stations": stations,
     })
 
-
-
 def cluster_search_view(request):
     form = ClusterSearchForm(request.GET or None)
     clusters = []
@@ -246,8 +299,6 @@ def cluster_search_view(request):
         "clusters": clusters,
     })
 
-
-
 def station_details_view(request, nlc_code):
     # Get the station or return a 404 if not found
     station = get_object_or_404(Station, nlc_code=nlc_code)
@@ -259,7 +310,6 @@ def station_details_view(request, nlc_code):
         "station": station,
         "clusters": clusters,
     })
-
 
 def station_search_view(request):
     form = StationSearchForm(request.GET or None)
@@ -277,8 +327,6 @@ def station_search_view(request):
         "form": form,
         "stations": stations,
     })
-
-
 
 def flow_detail_view(request, flow_id):
     flow = get_object_or_404(Flow, flow_id=flow_id)
