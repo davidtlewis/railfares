@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Station Search</title>
+    <title>Station Group Search</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -55,36 +55,36 @@
 </head>
 
 <body>
-    <h1>Search Stations</h1>
+    <h1>Search Station Groups</h1>
 
     <form method="get" action="">
         {{ form.as_p }}
         <button type="submit">Search</button>
     </form>
 
-    {% if stations %}
+    {% if groups %}
     <h2>Search Results</h2>
     <table>
         <thead>
             <tr>
-                <th>Station Code</th>
-                <th>Station Name</th>
+                <th>Group ID</th>
+                <th>Group Name</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            {% for station in stations %}
+            {% for group in groups %}
             <tr>
-                <td>{{ station.nlc_code }}</td>
-                <td>{{ station.name }}</td>
-                <td><a href="{% url 'station_details' station.nlc_code %}">View Details</a></td>
+                <td>{{ group.group_id }}</td>
+                <td>{{ group.name }}</td>
+                <td><a href="{% url 'station_group_details' group.group_id %}">View Details</a></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     {% else %}
     {% if form.is_bound %}
-    <p>No stations found matching your search query.</p>
+    <p>No station groups found matching your search query.</p>
     {% endif %}
     {% endif %}
 </body>

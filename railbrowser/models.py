@@ -68,12 +68,25 @@ class Fare(models.Model):
     def __str__(self):
         return f"Fare for Flow ID {self.flow.flow_id}"
 
+
 class Station(models.Model):
-    nlc_code = models.CharField(max_length=4, unique=True)  # National Location Code
+    nlc_code = models.CharField(max_length=4, unique=True)
+    uic_code = models.CharField(max_length=7, unique=True)
     name = models.CharField(max_length=100)
+    crs_code = models.CharField(max_length=3, null=True)
+    pte_code = models.CharField(max_length=2, null=True)
 
     def __str__(self):
-        return f"Station {self.nlc_code}: {self.name}"
+        return f"{self.name} ({self.nlc_code})"
+
+class StationGroup(models.Model):
+    group_id = models.CharField(max_length=7, unique=True)  # Unique identifier for the group
+    name = models.CharField(max_length=100, null=True)  # Descriptive name for the group
+    stations = models.ManyToManyField(Station, related_name="station_groups")  # Many-to-many relationship
+
+    def __str__(self):
+        return f"{self.name} ({self.group_id})"
+
 
 class StationCluster(models.Model):
     cluster_id = models.CharField(max_length=4, unique=True)

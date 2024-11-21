@@ -66,8 +66,13 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Flow data import completed successfully."))
 
     def _parse_flow_record(self, line, station_type, cluster_type):
-        """Parses a Flow record and returns a Flow object, or None if the record exists and is unchanged"""
+        """Parses a Flow record and returns a Flow object, or None if the record is not in right timeframe"""
         # Parse data from fixed-width line
+        start_date = self._parse_date2(line[28:36])
+        end_date = self._parse_date2(line[20:28])
+        if start_date > datetime.now().date() and end_date < datetime.now().date():
+            return None
+        
         origin_code = line[2:6].strip()
         destination_code = line[6:10].strip()
 
@@ -117,6 +122,13 @@ class Command(BaseCommand):
         """Parses date from ddmmyyyy format to datetime.date or None"""
         if date_str == '31122999':  # High date indicates no end date
             return None
+        try:
+            return datetime.strptime(date_str, "%d%m%Y").date()
+        except ValueError:
+            return None
+
+    def _parse_date2(self, date_str):
+        """Parses date from ddmmyyyy format to datetime.date or None"""
         try:
             return datetime.strptime(date_str, "%d%m%Y").date()
         except ValueError:

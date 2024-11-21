@@ -6,6 +6,10 @@ class  StationAdmin(admin.ModelAdmin):
     list_display = ('nlc_code','name')
     search_fields = ["nlc_code","name"]
 
+class StationGroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'group_id')
+    search_fields = ('name', 'group_id')
+    filter_horizontal = ('stations',)  # Use a horizontal filter for managing many-to-many relationships
 
 class FlowAdmin(admin.ModelAdmin):
     list_display = ('flow_id','origin','destination')
@@ -13,19 +17,22 @@ class FlowAdmin(admin.ModelAdmin):
 
 class StationClusterAdmin(admin.ModelAdmin):
     search_fields = ["cluster_id"]
+    raw_id_fields = ('stations',)  # Use raw_id_fields for foreign keys
 
 class FareAdmin(admin.ModelAdmin):
     list_display = ('flow','ticket_type','fare','restriction_code')
+    raw_id_fields = ('flow', 'ticket_type')  # Use raw_id_fields for foreign keys
 
 class TicketTypeAdmin(admin.ModelAdmin):
-    list_display = ('id','ticket_code','class_of_travel','ticket_type')
-    search_fields = ['origin ','destination']
+    list_display = ('id','ticket_code','description',   'class_of_travel','ticket_type','end_date','start_date')
+    search_fields = ['description','ticket_code']
 
 admin.site.register(Station, StationAdmin)
 admin.site.register(StationCluster, StationClusterAdmin)
 admin.site.register(Flow, FlowAdmin)
 admin.site.register(Fare, FareAdmin)
 admin.site.register(TicketType, TicketTypeAdmin)
+admin.site.register(StationGroup, StationGroupAdmin)
 
 
 # Inline classes for related models

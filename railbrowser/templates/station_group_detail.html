@@ -4,16 +4,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cluster Details</title>
+    <title>Station Group Details</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
 
+        form {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
         table {
             border-collapse: collapse;
             width: 100%;
+            margin-top: 20px;
         }
 
         th,
@@ -29,12 +55,12 @@
 </head>
 
 <body>
-    <h1>Cluster Details</h1>
+    <h1>Station Group Details</h1>
 
-    <p><strong>Cluster ID:</strong> {{ cluster.cluster_id }}</p>
-    <p><strong>Cluster Name:</strong> {{ cluster.name }}</p>
+    <p><strong>Group ID:</strong> {{ group.group_id }}</p>
+    <p><strong>Group Name:</strong> {{ group.name }}</p>
 
-    <h2>Stations in this Cluster</h2>
+    <h2>Stations in this Group</h2>
     {% if stations %}
     <table>
         <thead>
@@ -53,7 +79,7 @@
         </tbody>
     </table>
     {% else %}
-    <p>No stations are associated with this cluster.</p>
+    <p>No stations are associated with this group.</p>
     {% endif %}
 </body>
 

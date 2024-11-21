@@ -27,11 +27,15 @@ class Command(BaseCommand):
                 if line.startswith("/"):  # Skip comments
                     continue
 
-                c_code = line[1:5]
-                s_id = line[5:9]
+                if int(line[13:17]) > 2024: #only deal with current cluser data
+                    c_code = line[1:5]
+                    s_id = line[5:9]
 
-                cluster, created = StationCluster.objects.get_or_create(cluster_id = c_code)
-                station, created = Station.objects.get_or_create(nlc_code = s_id)
-                cluster.stations.add(station)
-                print(f'line number: {line_number}. {line}')
-                print(f'c_code {c_code} and s_id {s_id}')
+                    cluster, created = StationCluster.objects.get_or_create(cluster_id = c_code)
+                    
+                    try:
+                        station = Station.objects.get(nlc_code=s_id)
+                        cluster.stations.add(station)
+                        #print(f'line number: {line_number}.  c_code {c_code} and s_id {s_id}')
+                    except Station.DoesNotExist:
+                        print(f'line number: {line_number}.  c_code {c_code} and s_id {s_id} Station not found')

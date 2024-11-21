@@ -44,17 +44,21 @@
     <table>
         <thead>
             <tr>
+                <th>Origin</th>
+                <th>destination</th>
                 <th>Ticket Type</th>
                 <th>Fare</th>
                 <th>Restriction</th>
             </tr>
         </thead>
         <tbody>
-            {% for fare in fares %}
+            {% for item in fares_with_resolved_flows %}
             <tr>
-                <td>{{ fares_with_resolved_flows.ticket_type.description }}</td>
-                <td>{{ fares_with_resolved_flows.fare|floatformat:2 }}</td>
-                <td>{{ fares_with_resolved_flows.restriction_code|default:"None" }}</td>
+                <td>{{ item.origin }}</td>
+                <td>{{ item.destination }}</td>
+                <td>{{ item.fare.ticket_type }}</td>
+                <td>{{ item.fare.fare|floatformat:2 }}</td>
+                <td>{{ item.fare.restriction_code|default:"None" }}</td>
             </tr>
             {% endfor %}
         </tbody>

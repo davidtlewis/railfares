@@ -35,3 +35,11 @@ class StationSearchForm(forms.Form):
         label="Search Stations",
         widget=forms.TextInput(attrs={"placeholder": "Enter Station Code or Name", "class": "form-control"}),
     )
+
+class StationGroupSearchForm(forms.Form):
+    search_query = forms.CharField(
+        max_length=100,
+        required=False,
+        label="Search Station Groups",
+        widget=forms.TextInput(attrs={"placeholder": "Enter Group ID or Name", "class": "form-control"}),
+    )
