@@ -1,92 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Station Group Search</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
+{% block title %}Search Station group{% endblock %}
 
-        form {
-            margin-bottom: 20px;
-        }
 
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
+{% block content %}
+<h1>Search Station Groups</h1>
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+<form method="get" action="">
+    {{ form.as_p }}
+    <button type="submit">Search</button>
+</form>
 
-        button:hover {
-            background-color: #45a049;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>Search Station Groups</h1>
-
-    <form method="get" action="">
-        {{ form.as_p }}
-        <button type="submit">Search</button>
-    </form>
-
-    {% if groups %}
-    <h2>Search Results</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Group ID</th>
-                <th>Group Name</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for group in groups %}
-            <tr>
-                <td>{{ group.group_id }}</td>
-                <td>{{ group.name }}</td>
-                <td><a href="{% url 'station_group_details' group.group_id %}">View Details</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    {% if form.is_bound %}
-    <p>No station groups found matching your search query.</p>
-    {% endif %}
-    {% endif %}
-</body>
-
-</html>
+{% if groups %}
+<h2>Search Results</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Group ID</th>
+            <th>Group Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in groups %}
+        <tr>
+            <td>{{ group.group_id }}</td>
+            <td>{{ group.name }}</td>
+            <td><a href="{% url 'station_group_details' group.group_id %}">View Details</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+{% if form.is_bound %}
+<p>No station groups found matching your search query.</p>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,17 +1,43 @@
-<!DOCTYPE html>
-<html>
+{% extends 'base.html' %}
 
-<head>
-    <title>Search Flow</title>
-</head>
+{% block title %}Search Flow{% endblock %}
 
-<body>
-    <h1>Search Flow by ID</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Search</button>
-    </form>
-</body>
 
-</html>
+{% block content %}
+<h1>Search Flows</h1>
+
+<form method="get" action="">
+    {{ form.as_p }}
+    <button type="submit">Search</button>
+</form>
+
+{% if flows %}
+<h2>Search Results</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Flow id</th>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for flow in flows %}
+        <tr>
+            <td>{{ flow.id }}</td>
+            <td>{{ flow.flow_id }}</td>
+            <td>{{ flow.origin_content_type.model }}: {{ flow.origin_object_id }}</td>
+            <td>{{ flow.destination_content_type.model }}: {{ flow.destination_object_id }}</td>
+            <td><a href="{% url 'flow_details' flow.id %}">View Details</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+{% if form.is_bound %}
+<p>No flows found matching your search criteria.</p>
+{% endif %}
+{% endif %}
+{% endblock %}

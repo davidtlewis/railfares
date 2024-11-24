@@ -1,60 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cluster Details</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
+{% block title %}Cluster Detail{% endblock %}
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
 
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
+{% block content %}
+<h1>Cluster Details</h1>
 
-        th {
-            background-color: #f4f4f4;
-        }
-    </style>
-</head>
+<p><strong>Cluster ID:</strong> {{ cluster.cluster_id }}</p>
+<p><strong>Cluster Name:</strong> {{ cluster.name }}</p>
 
-<body>
-    <h1>Cluster Details</h1>
-
-    <p><strong>Cluster ID:</strong> {{ cluster.cluster_id }}</p>
-    <p><strong>Cluster Name:</strong> {{ cluster.name }}</p>
-
-    <h2>Stations in this Cluster</h2>
-    {% if stations %}
-    <table>
-        <thead>
-            <tr>
-                <th>Station Code</th>
-                <th>Station Name</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for station in stations %}
-            <tr>
-                <td>{{ station.nlc_code }}</td>
-                <td><a href="{% url 'station_details' station.nlc_code %}">{{ station.name }}</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No stations are associated with this cluster.</p>
-    {% endif %}
-</body>
-
-</html>
+<h2>Stations in this Cluster</h2>
+{% if stations %}
+<table>
+    <thead>
+        <tr>
+            <th>Station Code</th>
+            <th>Station Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for station in stations %}
+        <tr>
+            <td>{{ station.nlc_code }}</td>
+            <td><a href="{% url 'station_details' station.nlc_code %}">{{ station.name }}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No stations are associated with this cluster.</p>
+{% endif %}
+{% endblock %}

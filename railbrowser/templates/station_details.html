@@ -1,126 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Station Details</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-
-        form {
-            margin-bottom: 20px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>Station Details</h1>
-
-    <p><strong>Station Code:</strong> {{ station.nlc_code }}</p>
-    <p><strong>Station Name:</strong> {{ station.name }}</p>
-
-    <h2>Groups Containing this Station</h2>
-    {% if station.station_groups.all %}
-    <table>
-        <thead>
-            <tr>
-                <th>Group</th>
-                <th>No of Stations</th>
-                <th>Stations</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for group in station.station_groups.all %}
-            <tr>
-                <td><a href="{% url 'station_group_details' group.group_id %}">{{ group.name }} </a></td>
-                <td>{{ group.stations.count }}</td>
-                <td>
-                    {% for group_station in group.stations.all|slice:":10" %}
-                    <a href="{% url 'station_details' group_station.nlc_code %}">
-                        {{ group_station.name }} ({{ group_station.nlc_code }})
-                    </a>{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>This station does not belong to any groups.</p>
-    {% endif %}
-
-    <h2>Clusters Containing this Station</h2>
-    {% if station.clusters.all %}
-    <table>
-        <thead>
-            <tr>
-                <th>Cluster</th>
-                <th>No of Stations</th>
-                <th>Stations (first 10)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cluster in station.clusters.all %}
-            <tr>
-                <td><a href="{% url 'cluster_details' cluster.cluster_id %}"> {{ cluster.cluster_id }}</a></td>
-                <td>{{ cluster.stations.count }}</td>
-                <td>
-                    {% for cluster_station in cluster.stations.all|slice:":10" %}
-                    <a href="{% url 'station_details' cluster_station.nlc_code %}">
-                        {{ cluster_station.name }}
-                    </a>{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>This station does not belong to any clusters.</p>
-    {% endif %}
+{% block title %}Station Detail{% endblock %}
 
 
-</body>
+{% block content %}
+<h1>Station Details</h1>
 
-</html>
+<p><strong>Station Code:</strong> {{ station.nlc_code }}</p>
+<p><strong>Station Name:</strong> {{ station.name }}</p>
+
+<h2>Groups Containing this Station</h2>
+{% if station.station_groups.all %}
+<table>
+    <thead>
+        <tr>
+            <th>Group ID</th>
+            <th>Group</th>
+            <th>No of Stations</th>
+            <th>Stations</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in station.station_groups.all %}
+        <tr>
+            <td>{{ group.group_id}}</td>
+            <td><a href="{% url 'station_group_details' group.group_id %}">{{ group.name }} </a></td>
+            <td>{{ group.stations.count }}</td>
+            <td>
+                {% for group_station in group.stations.all|slice:":10" %}
+                <a href="{% url 'station_details' group_station.nlc_code %}">
+                    {{ group_station.name }} ({{ group_station.nlc_code }})
+                </a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>This station does not belong to any groups.</p>
+{% endif %}
+
+<h2>Clusters Containing this Station</h2>
+{% if station.clusters.all %}
+<table>
+    <thead>
+        <tr>
+            <th>Cluster</th>
+            <th>No of Stations</th>
+            <th>Stations (first 10)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cluster in station.clusters.all %}
+        <tr>
+            <td><a href="{% url 'cluster_details' cluster.cluster_id %}"> {{ cluster.cluster_id }}</a></td>
+            <td>{{ cluster.stations.count }}</td>
+            <td>
+                {% for cluster_station in cluster.stations.all|slice:":10" %}
+                <a href="{% url 'station_details' cluster_station.nlc_code %}">
+                    {{ cluster_station.name }}
+                </a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>This station does not belong to any clusters.</p>
+{% endif %}
+
+{% endblock %}

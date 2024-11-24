@@ -1,18 +1,15 @@
-<!DOCTYPE html>
-<html>
+{% extends 'base.html' %}
 
-<head>
-    <title>Flow Detail</title>
-</head>
+{% block title %} Flow Detail{% endblock %}
 
-<body>
-    <h1>Flow Detail</h1>
-    <p><strong>ID:</strong> {{ flow.id }}</p>
-    <p><strong>Origin Content Type:</strong> {{ flow.origin_content_type }}</p>
-    <p><strong>Origin Object ID:</strong> {{ flow.origin_object_id }}</p>
-    <p><strong>Destination Content Type:</strong> {{ flow.destination_content_type }}</p>
-    <p><strong>Destination Object ID:</strong> {{ flow.destination_object_id }}</p>
-    <!-- Add more fields as needed -->
-</body>
 
-</html>
+{% block content %}
+<h1>Flow Detail</h1>
+<p><strong>ID:</strong> {{ flow.id }}</p>
+<p><strong>Flow Id:</strong> {{ flow.flow_id }}</p>
+<p><strong>Origin Content Type:</strong> {{ flow.origin_content_type }}</p>
+<p><strong>Origin Object ID:</strong> {{ flow.origin_object_id }}</p>
+<p><strong>Destination Content Type:</strong> {{ flow.destination_content_type }}</p>
+<p><strong>Destination Object ID:</strong> {{ flow.destination_object_id }}</p>
+<!-- Add more fields as needed -->
+{% endblock %}

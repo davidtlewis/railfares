@@ -46,9 +46,7 @@ class Command(BaseCommand):
                                 )
                                 batch_counter = 0
                                 fares_to_create.clear()
-
                             # print(f'Line numner: {line_number}  Batch numcounter {batch_counter}')
-
 
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e}"))

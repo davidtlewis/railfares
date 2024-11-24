@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Fares{% endblock %}
+
+
+{% block content %}
+<h1>Find Fares</h1>
+
+<form method="get" action="">
+    {{ form.as_p }}
+    <button type="submit">Search</button>
+</form>
+
+{% if fares %}
+<h2>Results</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>Ticket Type</th>
+            <th>Fare</th>
+            <th>Restriction</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in fares %}
+        <tr>
+            <td>
+                {% if item.origin %}
+                {% if item.origin_type == 'Station' %}
+                <a href="{% url 'station_details' item.origin.nlc_code %}">
+                    {{ item.origin.name }} ({{ item.origin.nlc_code }})
+                </a>
+                {% elif item.origin_type == 'StationCluster' %}
+                <a href="{% url 'cluster_details' item.origin.cluster_id %}">
+                    {{ item.origin.name }} (Cluster)
+                </a>
+                {% elif item.origin_type == 'StationGroup' %}
+                <a href="{% url 'station_group_details' item.origin.group_id %}">
+                    {{ item.origin.name }} (Group)
+                </a>
+                {% endif %}
+                {% else %}
+                Unknown Origin
+                {% endif %}
+            </td>
+            <td>
+                {% if item.destination %}
+                {% if item.destination_type == 'Station' %}
+                <a href="{% url 'station_details' item.destination.nlc_code %}">
+                    {{ item.destination.name }} ({{ item.destination.nlc_code }})
+                </a>
+                {% elif item.destination_type == 'StationCluster' %}
+                <a href="{% url 'cluster_details' item.destination.cluster_id %}">
+                    {{ item.destination.name }} (Cluster)
+                </a>
+                {% elif item.destination_type == 'StationGroup' %}
+                <a href="{% url 'station_group_details' item.destination.group_id %}">
+                    {{ item.destination.name }} (Group)
+                </a>
+                {% endif %}
+                {% else %}
+                Unknown Destination
+                {% endif %}
+            </td>
+            <td>{{ item.fare.ticket_type.description }}</td>
+            <td>{{ item.fare.fare|floatformat:2 }}</td>
+            <td>{{ item.fare.restriction_code|default:"None" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+{% if form.is_bound %}
+<p>No fares found for the given origin and destination.</p>
+{% endif %}
+{% endif %}
+
+
+{% endblock %}

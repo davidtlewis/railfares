@@ -47,3 +47,21 @@ http://127.0.0.1:8000/find_fares/?origin=0785&destination=1900
 Form based search - includes station and clusters
 http://127.0.0.1:8000/find_fares_view/
 
+
+Fare.objects.all().delete()
+Flow.objects.all().delete()
+StationCluster.objects.all().delete()
+StationGroup.objects.all().delete()
+Station.objects.all().delete()
+
+
+
+python3 manage.py import_locations2 ../raildata/RJFAF217.LOC
+python3 manage.py import_clusters ../raildata/RJFAF217.FSC
+python3 manage.py import_flows2 ../raildata/RJFAF217.FFL
+
+TODO - need to fix location importer to fix up the nlc code for groups - in the meantime....
+
+for group in StationGroup.objects.all():
+     group.save()
+

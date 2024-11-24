@@ -12,8 +12,22 @@ class StationGroupAdmin(admin.ModelAdmin):
     filter_horizontal = ('stations',)  # Use a horizontal filter for managing many-to-many relationships
 
 class FlowAdmin(admin.ModelAdmin):
-    list_display = ('flow_id','origin','destination')
-    search_fields = ["nlc_code",'origin ','destination']
+    list_display = ("id", "origin", "destination")
+    search_fields = (
+        "id",  # Search by Flow ID
+        "origin_content_type__model",  # Search by origin type (Station, Cluster, Group)
+        "destination_content_type__model",  # Search by destination type
+        "origin_object_id",  # Search by origin ID
+        "destination_object_id",  # Search by destination ID
+    )
+
+    def origin(self, obj):
+        """Display the origin object."""
+        return f"{obj.origin_content_type.model} (ID: {obj.origin_object_id})"
+
+    def destination(self, obj):
+        """Display the destination object."""
+        return f"{obj.destination_content_type.model} (ID: {obj.destination_object_id})"
 
 class StationClusterAdmin(admin.ModelAdmin):
     search_fields = ["cluster_id"]

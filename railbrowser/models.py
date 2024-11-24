@@ -49,7 +49,6 @@ class Flow(models.Model):
         destination_name = self.destination if self.destination else "Unknown"
         return f"Flow from {origin_name} to {destination_name}"
 
-
 class Fare(models.Model):
     flow = models.ForeignKey(Flow, on_delete=models.CASCADE, related_name="fares")
     ticket_type = models.ForeignKey(TicketType, on_delete=models.CASCADE, related_name="fares")
@@ -68,25 +67,32 @@ class Fare(models.Model):
     def __str__(self):
         return f"Fare for Flow ID {self.flow.flow_id}"
 
-
 class Station(models.Model):
     nlc_code = models.CharField(max_length=4, unique=True)
     uic_code = models.CharField(max_length=7, unique=True)
     name = models.CharField(max_length=100)
     crs_code = models.CharField(max_length=3, null=True)
     pte_code = models.CharField(max_length=2, null=True)
+    #global_id = models.UUIDField(default=uuid.uuid4, unique=True)  # Globally unique ID
 
     def __str__(self):
-        return f"{self.name} ({self.nlc_code})"
+        return f"Station {self.name} ({self.nlc_code})"
+
 
 class StationGroup(models.Model):
     group_id = models.CharField(max_length=7, unique=True)  # Unique identifier for the group
-    name = models.CharField(max_length=100, null=True)  # Descriptive name for the group
-    stations = models.ManyToManyField(Station, related_name="station_groups")  # Many-to-many relationship
+    name = models.CharField(max_length=100, blank=True, null=True)  # Descriptive name for the group
+    nlc_code = models.CharField(max_length=4, unique=True, null=True, blank=True)  # Derived NLC code
+    stations = models.ManyToManyField('Station', related_name="station_groups")  # Many-to-many relationship
+
+    def save(self, *args, **kwargs):
+        # Automatically derive the NLC code from the UIC if not provided
+        if not self.nlc_code:
+            self.nlc_code = self.group_id[2:6]  # Characters 3 to 6 (0-indexed)
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name} ({self.group_id})"
-
+        return f"StationGroup {self.nlc_code} ({self.group_id})"
 
 class StationCluster(models.Model):
     cluster_id = models.CharField(max_length=4, unique=True)

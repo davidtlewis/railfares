@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{% block title %}My Application{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'flow_search' %}">Search Flow</a></li>
+            <li><a href="{% url 'cluster_search' %}">Search Cluster</a></li>
+            <li><a href="{% url 'station_search' %}">Search Station</a></li>
+            <li><a href="{% url 'station_group_search' %}">Search Station Group</a></li>
+            <li><a href="{% url 'find_fares5' %}">Find Fares</a></li>
+        </ul>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+
+</html>

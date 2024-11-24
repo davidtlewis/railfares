@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from django.core.management.base import BaseCommand
 from django.contrib.contenttypes.models import ContentType
-from railbrowser.models import Flow, Station, StationCluster, Restriction
+from railbrowser.models import Flow, Station, StationCluster, StationGroup, Restriction
 
 class Command(BaseCommand):
     help = "Imports flow data from flat files into the database"
@@ -22,9 +22,10 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"Starting flow import from {file_path}..."))
 
-        # Get ContentTypes for Station and StationCluster models
+        # Get ContentTypes for Station, StationGroup and StationCluster models
         station_type = ContentType.objects.get_for_model(Station)
         cluster_type = ContentType.objects.get_for_model(StationCluster)
+        group_type = ContentType.objects.get_for_model(StationGroup)
 
         # Prepare lists for bulk creation and updates
         flows_to_create = []
@@ -38,7 +39,7 @@ class Command(BaseCommand):
                     record_type = line[1:2].strip()
                     if record_type == 'F':
                         flow = self._parse_flow_record(
-                            line, station_type, cluster_type
+                            line, station_type, cluster_type, group_type
                         )
                         if flow:
                             flows_to_create.append(flow)
@@ -65,7 +66,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Flow data import completed successfully."))
 
-    def _parse_flow_record(self, line, station_type, cluster_type):
+    def _parse_flow_record(self, line, station_type, cluster_type, group_type):
         """Parses a Flow record and returns a Flow object, or None if the record is not in right timeframe"""
         # Parse data from fixed-width line
         start_date = self._parse_date2(line[28:36])
@@ -90,26 +91,41 @@ class Command(BaseCommand):
             'flow_id': line[42:49].strip(),
         }
 
+        # print('origin_code:', origin_code)
+        # print('destination_code:', destination_code)
+        # print('Flow data:', flow_data)
+
+        # print('about to resolve origin')
         # Resolve origin and destination
         flow_data['origin_content_type'], flow_data['origin_object_id'] = self._get_content_type_and_id(
-            origin_code, station_type, cluster_type
+            origin_code, station_type, cluster_type, group_type
         )
+        # print('Flow data:', flow_data)
+
+        # print('about to resolve destination')
         flow_data['destination_content_type'], flow_data['destination_object_id'] = self._get_content_type_and_id(
-            destination_code, station_type, cluster_type
+            destination_code, station_type, cluster_type, group_type
         )
+        # print('Flow data:', flow_data)
+
         # Create a new Flow instance
         # print(f'created flow - not yet written')
         return Flow(**flow_data)
 
-    def _get_content_type_and_id(self, code, station_type, cluster_type):
-        """Determine if code corresponds to a Station or StationCluster and return ContentType and ID"""
+    def _get_content_type_and_id(self, code, station_type, cluster_type, group_type):
+        """Determine if code corresponds to a Station or Stationgroup or  StationCluster and return ContentType and ID"""
         try:
             # Check if code corresponds to a Station
             station = Station.objects.get(nlc_code=code)
             return station_type, station.id
         except Station.DoesNotExist:
             pass
-
+        try:
+            # Check if code corresponds to a StationGroup
+            stationGroup = StationGroup.objects.get(nlc_code=code)
+            return group_type, stationGroup.id
+        except StationGroup.DoesNotExist:
+            pass    
         try:
             # Check if code corresponds to a StationCluster
             cluster = StationCluster.objects.get(cluster_id=code)
