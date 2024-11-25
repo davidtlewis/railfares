@@ -29,6 +29,9 @@ class Command(BaseCommand):
 
         # Prepare lists for bulk creation and updates
         flows_to_create = []
+        unresolved_origins = set()
+        unresolved_destinations = set()
+
         # existing_flows = {f.flow_id: f for f in Flow.objects.all()}
         batch_counter = 0
         with open(file_path, 'r') as file:
@@ -89,25 +92,24 @@ class Command(BaseCommand):
             'ns_discount_indicator': line[40:41].strip(),
             'publication_indicator': line[41:42].strip() == 'Y',
             'flow_id': line[42:49].strip(),
+            'source_data': line,
+            
         }
 
         # print('origin_code:', origin_code)
         # print('destination_code:', destination_code)
         # print('Flow data:', flow_data)
-
         # print('about to resolve origin')
         # Resolve origin and destination
-        flow_data['origin_content_type'], flow_data['origin_object_id'] = self._get_content_type_and_id(
+        flow_data['origin_content_type'], flow_data['origin_global_id'] = self._get_content_type_and_id(
             origin_code, station_type, cluster_type, group_type
         )
         # print('Flow data:', flow_data)
-
         # print('about to resolve destination')
-        flow_data['destination_content_type'], flow_data['destination_object_id'] = self._get_content_type_and_id(
+        flow_data['destination_content_type'], flow_data['destination_global_id'] = self._get_content_type_and_id(
             destination_code, station_type, cluster_type, group_type
         )
         # print('Flow data:', flow_data)
-
         # Create a new Flow instance
         # print(f'created flow - not yet written')
         return Flow(**flow_data)

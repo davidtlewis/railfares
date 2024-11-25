@@ -93,8 +93,6 @@ def find_fares_view4(request):
         'fares': fares_with_resolved_flows,  # Pass as `fares` for template compatibility
     })
 
-from django.contrib.contenttypes.models import ContentType
-
 def find_fares_view5(request):
     form = FindFaresForm(request.GET or None)
     fares_with_resolved_flows = []
@@ -174,6 +172,63 @@ def find_fares_view5(request):
         'form': form,
         'fares': fares_with_resolved_flows,
     })
+
+
+def find_fares_view6(request):
+    form = FindFaresForm(request.GET or None)
+    fares_with_resolved_flows = []
+
+    if form.is_valid():
+        origin_code = form.cleaned_data['origin']
+        destination_code = form.cleaned_data['destination']
+
+        try:
+            origin_station = Station.objects.get(nlc_code=origin_code)
+            destination_station = Station.objects.get(nlc_code=destination_code)
+
+            origin_global_ids = [origin_station.global_id] + list(
+                StationGroup.objects.filter(stations=origin_station).values_list('global_id', flat=True)
+            ) + list(
+                StationCluster.objects.filter(stations=origin_station).values_list('global_id', flat=True)
+            )
+
+            destination_global_ids = [destination_station.global_id] + list(
+                StationCluster.objects.filter(stations=destination_station).values_list('global_id', flat=True)
+            ) + list(
+                StationGroup.objects.filter(stations=destination_station).values_list('global_id', flat=True)
+            )
+
+            flows = Flow.objects.filter(
+                Q(origin_global_id__in=origin_global_ids) &
+                Q(destination_global_id__in=destination_global_ids)
+            )
+
+
+            #debug print
+            print(f'Origin Station: {origin_station}')
+            print(f'Destination Station: {destination_station}')
+            print(f'Origin IDs: {origin_global_ids}')
+            print(f'Destination IDs: {destination_global_ids}')
+            print(f'Flows: {list(flows.values_list("id", flat=True))}')
+
+            fares = Fare.objects.filter(flow__in=flows).select_related('flow', 'ticket_type')
+
+            for fare in fares:
+                flow = fare.flow
+                fares_with_resolved_flows.append({
+                    'fare': fare,
+                    'origin': _resolve_generic(flow.origin_content_type, flow.origin_global_id),
+                    'destination': _resolve_generic(flow.destination_content_type, flow.destination_global_id),
+                })
+
+        except Station.DoesNotExist:
+            form.add_error(None, "One or both station codes are invalid.")
+
+    return render(request, 'find_fares6.html', {
+        'form': form,
+        'fares': fares_with_resolved_flows,
+    })
+
 
 
 def _resolve_generic(content_type, object_id):

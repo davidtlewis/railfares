@@ -36,6 +36,8 @@ quick
 Flows File
 python manage.py import_flows ../raildata/***.FFL
 706k flow records
+
+python manage.py import_fares ../raildata/***.FFL
 7 million fare records!
 
 
@@ -56,9 +58,9 @@ Station.objects.all().delete()
 
 
 
-python3 manage.py import_locations2 ../raildata/RJFAF217.LOC
+python3 manage.py import_locations ../raildata/RJFAF217.LOC
 python3 manage.py import_clusters ../raildata/RJFAF217.FSC
-python3 manage.py import_flows2 ../raildata/RJFAF217.FFL
+python3 manage.py import_flows ../raildata/RJFAF217.FFL
 
 TODO - need to fix location importer to fix up the nlc code for groups - in the meantime....
 

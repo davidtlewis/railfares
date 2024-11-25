@@ -73,8 +73,9 @@ class Command(BaseCommand):
     def _parse_group(self, line):
         """Parse a G record to create a StationGroup."""
         group_id = line[2:9].strip()
+        nlc_code = group_id[2:6]
         name = line[33:49].strip()
-        return StationGroup(group_id=group_id, name=name)
+        return StationGroup(group_id=group_id, name=name, nlc_code=nlc_code)
 
     def _parse_membership(self, line):
         """Parse an M record to create a membership relationship."""

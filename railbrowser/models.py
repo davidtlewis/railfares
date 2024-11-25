@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+import uuid
 
 class TicketType(models.Model):
     update_marker = models.CharField(max_length=1)
@@ -23,15 +24,14 @@ class TicketType(models.Model):
 class Flow(models.Model):
     # Generic Foreign Key setup for Origin
     origin_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="origin_flows", null=True)
-    origin_object_id = models.PositiveIntegerField(null=True)
-    origin = GenericForeignKey('origin_content_type', 'origin_object_id')
+    origin_global_id = models.UUIDField(null=True)  # Globally unique origin ID
+    origin_object = GenericForeignKey('origin_content_type', 'origin_global_id')  # Generic foreign key for origin
     
     # Generic Foreign Key setup for Destination
     destination_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="destination_flows", null=True)
-    destination_object_id = models.PositiveIntegerField(null=True)
-    destination = GenericForeignKey('destination_content_type', 'destination_object_id')
-    
-    # Other fields as before
+    destination_global_id = models.UUIDField(null=True)  # Globally unique destination ID
+    destination_object = GenericForeignKey('destination_content_type', 'destination_global_id')
+
     route_code = models.CharField(max_length=5)
     status_code = models.CharField(max_length=3, default='000')
     usage_code = models.CharField(max_length=1)
@@ -43,11 +43,10 @@ class Flow(models.Model):
     ns_discount_indicator = models.CharField(max_length=1)
     publication_indicator = models.BooleanField(default=False)
     flow_id = models.CharField(max_length=7, unique=True)
+    source_data = models.CharField(max_length=50, null=True, blank=True)
     
     def __str__(self):
-        origin_name = self.origin if self.origin else "Unknown"
-        destination_name = self.destination if self.destination else "Unknown"
-        return f"Flow from {origin_name} to {destination_name}"
+        return f"Flow from {self.origin_object} to {self.destination_object}"
 
 class Fare(models.Model):
     flow = models.ForeignKey(Flow, on_delete=models.CASCADE, related_name="fares")
@@ -73,17 +72,18 @@ class Station(models.Model):
     name = models.CharField(max_length=100)
     crs_code = models.CharField(max_length=3, null=True)
     pte_code = models.CharField(max_length=2, null=True)
-    #global_id = models.UUIDField(default=uuid.uuid4, unique=True)  # Globally unique ID
+    global_id = models.UUIDField(default=uuid.uuid4, unique=True)  # Globally unique ID
 
     def __str__(self):
         return f"Station {self.name} ({self.nlc_code})"
-
 
 class StationGroup(models.Model):
     group_id = models.CharField(max_length=7, unique=True)  # Unique identifier for the group
     name = models.CharField(max_length=100, blank=True, null=True)  # Descriptive name for the group
     nlc_code = models.CharField(max_length=4, unique=True, null=True, blank=True)  # Derived NLC code
     stations = models.ManyToManyField('Station', related_name="station_groups")  # Many-to-many relationship
+    global_id = models.UUIDField(default=uuid.uuid4, unique=True)  # Globally unique ID
+
 
     def save(self, *args, **kwargs):
         # Automatically derive the NLC code from the UIC if not provided
@@ -97,6 +97,9 @@ class StationGroup(models.Model):
 class StationCluster(models.Model):
     cluster_id = models.CharField(max_length=4, unique=True)
     stations = models.ManyToManyField(Station, related_name="clusters")
+    station_groups = models.ManyToManyField(StationGroup, related_name="clusters")
+    global_id = models.UUIDField(default=uuid.uuid4, unique=True)  # Globally unique ID
+
 
     def __str__(self):
         return f"Cluster {self.cluster_id}"

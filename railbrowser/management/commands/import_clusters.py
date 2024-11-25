@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from railbrowser.models import Flow, Station, StationCluster, Restriction, Fare
 
 class Command(BaseCommand):
-    help = "Imports fare, station, and cluster data from flat files into the database"
+    help = "Imports  cluster data from flat files into the database"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
                 if int(line[13:17]) > 2024: #only deal with current cluser data
                     c_code = line[1:5]
-                    s_id = line[5:9]
+                    s_id = line[5:9] #might be a station of a stationgroup
 
                     cluster, created = StationCluster.objects.get_or_create(cluster_id = c_code)
                     
@@ -37,5 +37,11 @@ class Command(BaseCommand):
                         station = Station.objects.get(nlc_code=s_id)
                         cluster.stations.add(station)
                         #print(f'line number: {line_number}.  c_code {c_code} and s_id {s_id}')
-                    except Station.DoesNotExist:
-                        print(f'line number: {line_number}.  c_code {c_code} and s_id {s_id} Station not found')
+                    except:
+                        try:
+                            stationGroup = stationGroup.objects.get(nlc_code=s_id)
+                            cluster.station_groups.add(stationGroup)
+                            #print(f'line number: {line_number}.  c_code {c_code} and s_id {s_id}')
+                        except:
+                            continue
+                        #print(f'line number: {line_number}.  c_code {c_code} and s_id {s_id} Station not found')

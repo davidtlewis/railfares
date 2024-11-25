@@ -3,33 +3,30 @@ from railbrowser.models import *
 
 
 class  StationAdmin(admin.ModelAdmin):
-    list_display = ('nlc_code','name')
-    search_fields = ["nlc_code","name"]
+    list_display = ('global_id','nlc_code','name','pte_code')
+    search_fields = ["nlc_code","name","pte_code"]
 
 class StationGroupAdmin(admin.ModelAdmin):
-    list_display = ('name', 'group_id')
+    list_display = ('global_id','nlc_code','name', 'group_id')
     search_fields = ('name', 'group_id')
     filter_horizontal = ('stations',)  # Use a horizontal filter for managing many-to-many relationships
 
 class FlowAdmin(admin.ModelAdmin):
-    list_display = ("id", "origin", "destination")
+    list_display = ("flow_id",  "origin_object",  "destination_object","route_code","direction","toc_code",)
     search_fields = (
-        "id",  # Search by Flow ID
-        "origin_content_type__model",  # Search by origin type (Station, Cluster, Group)
-        "destination_content_type__model",  # Search by destination type
-        "origin_object_id",  # Search by origin ID
-        "destination_object_id",  # Search by destination ID
+        "origin_object", "destination_content_type", "destination_object", "flow_id"
     )
 
-    def origin(self, obj):
-        """Display the origin object."""
-        return f"{obj.origin_content_type.model} (ID: {obj.origin_object_id})"
+    # def origin(self, obj):
+    #     """Display the origin object."""
+    #     return f"{obj.origin_content_type.model} (ID: {obj.origin_object_id})"
 
-    def destination(self, obj):
-        """Display the destination object."""
-        return f"{obj.destination_content_type.model} (ID: {obj.destination_object_id})"
+    # def destination(self, obj):
+    #     """Display the destination object."""
+    #     return f"{obj.destination_content_type.model} (ID: {obj.destination_object_id})"
 
 class StationClusterAdmin(admin.ModelAdmin):
+    list_display = ('global_id','cluster_id')
     search_fields = ["cluster_id"]
     raw_id_fields = ('stations',)  # Use raw_id_fields for foreign keys
 
