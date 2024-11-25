@@ -244,9 +244,14 @@ def cluster_details_view(request, cluster_id):
     # Retrieve all stations in the cluster
     stations = cluster.stations.all()
 
+    # Retrieve all stationGroupss in the cluster
+    stations = cluster.stations.all()
+    station_groups = cluster.station_groups.all()
+
     return render(request, "cluster_details.html", {
         "cluster": cluster,
         "stations": stations,
+        "station_groups": station_groups,
     })
 
 def cluster_search_view(request):
@@ -270,12 +275,18 @@ def station_details_view(request, nlc_code):
     # Get the station or return a 404 if not found
     station = get_object_or_404(Station, nlc_code=nlc_code)
 
+    groups = StationGroup.objects.filter(stations=station)
+
     # Get the clusters the station belongs to
     clusters = station.clusters.all()  # Assuming a `related_name="clusters"` on the ManyToManyField
 
+    cluster_of_groups = StationCluster.objects.filter(station_groups__in=groups)
+
     return render(request, "station_details.html", {
         "station": station,
+        "groups": groups,
         "clusters": clusters,
+        "cluster_of_groups": cluster_of_groups,
     })
 
 def station_search_view(request):
@@ -386,3 +397,6 @@ def flow_detail_view(request, flow_id):
         "flow": flow,
         "fares": fares,
     })
+
+def welcome_view(request):
+    return render(request, 'welcome.html')

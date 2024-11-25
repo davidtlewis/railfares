@@ -2,7 +2,7 @@ from django.contrib import admin
 from railbrowser.models import *
 
 
-class  StationAdmin(admin.ModelAdmin):
+class StationAdmin(admin.ModelAdmin):
     list_display = ('global_id','nlc_code','name','pte_code')
     search_fields = ["nlc_code","name","pte_code"]
 
@@ -26,9 +26,17 @@ class FlowAdmin(admin.ModelAdmin):
     #     return f"{obj.destination_content_type.model} (ID: {obj.destination_object_id})"
 
 class StationClusterAdmin(admin.ModelAdmin):
-    list_display = ('global_id','cluster_id')
+    list_display = ('global_id','cluster_id','station_count', 'station_group_count')
     search_fields = ["cluster_id"]
-    raw_id_fields = ('stations',)  # Use raw_id_fields for foreign keys
+    raw_id_fields = ('stations','station_groups')  # Use raw_id_fields for foreign keys
+
+    def station_count(self, obj):
+        return obj.stations.count()
+    station_count.short_description = 'Number of Stations'
+
+    def station_group_count(self, obj):
+        return obj.station_groups.count()
+    station_group_count.short_description = 'Number of Station Groups'
 
 class FareAdmin(admin.ModelAdmin):
     list_display = ('flow','ticket_type','fare','restriction_code')

@@ -83,6 +83,7 @@ class StationGroup(models.Model):
     nlc_code = models.CharField(max_length=4, unique=True, null=True, blank=True)  # Derived NLC code
     stations = models.ManyToManyField('Station', related_name="station_groups")  # Many-to-many relationship
     global_id = models.UUIDField(default=uuid.uuid4, unique=True)  # Globally unique ID
+    shadow_station = models.ForeignKey(Station, on_delete=models.CASCADE, related_name="real_group",null=True, blank=True) #  just to keep a link tothe annoying fake station of same nnc
 
 
     def save(self, *args, **kwargs):

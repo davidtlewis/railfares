@@ -3,6 +3,7 @@ from .views import *
 
 urlpatterns = [
     
+    path('', welcome_view, name='welcome'),  # Default view
     path('find_fares4/', find_fares_view4, name='find_fares4'),
     path('find_fares5/', find_fares_view5, name='find_fares5'),
     path('find_fares6/', find_fares_view6, name='find_fares6'),

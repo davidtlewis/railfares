@@ -30,4 +30,26 @@
 {% else %}
 <p>No stations are associated with this cluster.</p>
 {% endif %}
+
+<h2>Station Groups in this Cluster</h2>
+{% if station_groups %}
+<table>
+    <thead>
+        <tr>
+            <th>Station Group Code</th>
+            <th>Station Group Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for station_group in station_groups %}
+        <tr>
+            <td>{{ station_group.nlc_code }}</td>
+            <td><a href="{% url 'station_group_details' station_group.group_id %}">{{ station_group.name }}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No stations are associated with this cluster.</p>
+{% endif %}
 {% endblock %}

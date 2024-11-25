@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from railbrowser.models import Station, StationGroup
 
 class Command(BaseCommand):
-    help = "Imports stations, groups, and memberships from a flat file"
+    help = "Import groups, and memberships from a flat file"
 
     def add_arguments(self, parser):
         parser.add_argument('file_path', type=str, help="Path to the file containing station and group data")
@@ -28,12 +28,7 @@ class Command(BaseCommand):
                 
                 try:
                     record_type = line[1:2].strip()
-                    if record_type == 'L':  # Station record
-                        if int(line[13:17]) > 2024: #skip records that are out of date soon
-                            station = self._parse_station(line)
-                            if station:
-                                stations_to_create.append(station)
-                    elif record_type == 'G':  # Group record
+                    if record_type == 'G':  # Group record
                         if int(line[12:17]) > 2024: #skip records that are out of date soon
                             group = self._parse_group(line)
                             if group:
@@ -46,10 +41,6 @@ class Command(BaseCommand):
 
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e}"))
-
-        print(f'about to bulk create stations numbering {len(stations_to_create)}')
-        # Bulk create stations
-        Station.objects.bulk_create(stations_to_create, ignore_conflicts=True)
 
         print(f'about to bulk create station groups numbering {len(groups_to_create)}')
         # Bulk create station groups
@@ -75,7 +66,14 @@ class Command(BaseCommand):
         group_id = line[2:9].strip()
         nlc_code = group_id[2:6]
         name = line[33:49].strip()
-        return StationGroup(group_id=group_id, name=name, nlc_code=nlc_code)
+        print(f'nlccode is {nlc_code}')
+        try:
+            shadow_station = Station.objects.get(nlc_code=nlc_code)
+            print(f'shadow station is {shadow_station}')
+        except Station.DoesNotExist:
+            print(f'Station with nlc_code {nlc_code} does not exist.')
+            shadow_station = None  # or handle this case as needed
+        return StationGroup(group_id=group_id, name=name, nlc_code=nlc_code, shadow_station=shadow_station)
 
     def _parse_membership(self, line):
         """Parse an M record to create a membership relationship."""
