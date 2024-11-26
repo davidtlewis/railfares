@@ -183,6 +183,7 @@ def find_fares_view6(request):
         destination_code = form.cleaned_data['destination']
 
         try:
+            # todo  - extend clusters to those including the station group as well as the station itself
             origin_station = Station.objects.get(nlc_code=origin_code)
             destination_station = Station.objects.get(nlc_code=destination_code)
 
@@ -203,22 +204,30 @@ def find_fares_view6(request):
                 Q(destination_global_id__in=destination_global_ids)
             )
 
-
             #debug print
-            print(f'Origin Station: {origin_station}')
-            print(f'Destination Station: {destination_station}')
-            print(f'Origin IDs: {origin_global_ids}')
-            print(f'Destination IDs: {destination_global_ids}')
+            # print(f'Origin Station: {origin_station}')
+            # print(f'Destination Station: {destination_station}')
+            # print(f'Origin IDs: {origin_global_ids}')
+            # print(f'Destination IDs: {destination_global_ids}')
             print(f'Flows: {list(flows.values_list("id", flat=True))}')
 
             fares = Fare.objects.filter(flow__in=flows).select_related('flow', 'ticket_type')
 
             for fare in fares:
                 flow = fare.flow
+                origin = _resolve_generic(flow.origin_content_type, flow.origin_object_id)
+                destination = _resolve_generic(flow.destination_content_type, flow.destination_object_id)
+                # Add type info to each object
+                origin_type = type(origin).__name__ if origin else None
+                destination_type = type(destination).__name__ if destination else None
+
                 fares_with_resolved_flows.append({
                     'fare': fare,
-                    'origin': _resolve_generic(flow.origin_content_type, flow.origin_global_id),
-                    'destination': _resolve_generic(flow.destination_content_type, flow.destination_global_id),
+                    'origin': origin,
+                    'origin_type': origin_type,
+                    'destination': destination,
+                    'destination_type': destination_type,
+                    'flow': flow,
                 })
 
         except Station.DoesNotExist:
@@ -227,7 +236,9 @@ def find_fares_view6(request):
     return render(request, 'find_fares6.html', {
         'form': form,
         'fares': fares_with_resolved_flows,
+        'flows': flows
     })
+
 
 
 
@@ -354,28 +365,28 @@ def flow_search_view(request):
 
         if origin_query:
             query &= Q(
-                Q(origin_object_id__in=Station.objects.filter(
+                Q(origin_global_id__in=Station.objects.filter(
                     Q(name__icontains=origin_query) | Q(nlc_code__icontains=origin_query)
-                ).values_list("id", flat=True)) |
-                Q(origin_object_id__in=StationCluster.objects.filter(
+                ).values_list("global_id", flat=True)) |
+                Q(origin_global_id__in=StationCluster.objects.filter(
                     Q(cluster_id__icontains=origin_query)  # Fixed: Search by cluster_id instead of name
-                ).values_list("id", flat=True)) |
-                Q(origin_object_id__in=StationGroup.objects.filter(
+                ).values_list("global_id", flat=True)) |
+                Q(origin_global_id__in=StationGroup.objects.filter(
                     Q(name__icontains=origin_query) | Q(group_id__icontains=origin_query)
-                ).values_list("id", flat=True))
+                ).values_list("global_id", flat=True))
             )
 
         if destination_query:
             query &= Q(
-                Q(destination_object_id__in=Station.objects.filter(
+                Q(destination_global_id__in=Station.objects.filter(
                     Q(name__icontains=destination_query) | Q(nlc_code__icontains=destination_query)
-                ).values_list("id", flat=True)) |
-                Q(destination_object_id__in=StationCluster.objects.filter(
+                ).values_list("global_id", flat=True)) |
+                Q(destination_global_id__in=StationCluster.objects.filter(
                     Q(cluster_id__icontains=destination_query)  # Fixed: Search by cluster_id instead of name
-                ).values_list("id", flat=True)) |
-                Q(destination_object_id__in=StationGroup.objects.filter(
+                ).values_list("global_id", flat=True)) |
+                Q(destination_global_id__in=StationGroup.objects.filter(
                     Q(name__icontains=destination_query) | Q(group_id__icontains=destination_query)
-                ).values_list("id", flat=True))
+                ).values_list("global_id", flat=True))
             )
 
         flows = Flow.objects.filter(query).select_related("origin_content_type", "destination_content_type")

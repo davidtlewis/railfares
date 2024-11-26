@@ -11,6 +11,41 @@
     <button type="submit">Search</button>
 </form>
 
+{% if flows %}
+<h2>Results</h2>
+<table>
+    <thead>
+        <tr>
+            <th>flow_id</th>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>route code</th>
+            <th>direction</th>
+            <th>toc_code</th>
+            <th>Cros London</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for flow in flows %}
+        <tr>
+            <td>{{ flow.flow_id }}</td>
+            <td>{{ flow.origin_object }}</td>
+            <td>{{ flow.destination_object }}</td>
+            <td>{{ flow.route_code }}</td>
+            <td>{{ flow.direction }}</td>
+            <td>{{ flow.toc_code }}</td>
+            <td>{{ flow.cross_london_indicator }}</td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+{% if form.is_bound %}
+<p>No flows found for the given origin and destination.</p>
+{% endif %}
+{% endif %}
+
 {% if fares %}
 <h2>Results</h2>
 <table>
@@ -18,7 +53,13 @@
         <tr>
             <th>Origin</th>
             <th>Destination</th>
+            <th>Flow ID</th>
+            <th>Route</th>
+            <th>Ticket description</th>
             <th>Ticket Type</th>
+            <th>Class</th>
+            <th>Max Adults</th>
+            <th>Max Child</th>
             <th>Fare</th>
             <th>Restriction</th>
         </tr>
@@ -28,9 +69,11 @@
         <tr>
             <td>
                 {% if item.origin %}
+
                 {% if item.origin_type == 'Station' %}
+
                 <a href="{% url 'station_details' item.origin.nlc_code %}">
-                    {{ item.origin.name }} ({{ item.origin.nlc_code }})
+                    {{ item.origin }} ({{ item.origin_object.nlc_code }})
                 </a>
                 {% elif item.origin_type == 'StationCluster' %}
                 <a href="{% url 'cluster_details' item.origin.cluster_id %}">
@@ -64,7 +107,13 @@
                 Unknown Destination
                 {% endif %}
             </td>
+            <td>{{ item.flow.flow_id }}</td>
+            <td>{{ item.flow.route_code }}</td>
             <td>{{ item.fare.ticket_type.description }}</td>
+            <td>{{ item.fare.ticket_type.ticket_type }}</td>
+            <td>{{ item.fare.ticket_type.class_of_travel }}</td>
+            <td>{{ item.fare.ticket_type.max_adults }}</td>
+            <td>{{ item.fare.ticket_type.max_children }}</td>
             <td>{{ item.fare.fare|floatformat:2 }}</td>
             <td>{{ item.fare.restriction_code|default:"None" }}</td>
         </tr>

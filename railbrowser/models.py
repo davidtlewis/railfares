@@ -25,12 +25,14 @@ class Flow(models.Model):
     # Generic Foreign Key setup for Origin
     origin_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="origin_flows", null=True)
     origin_global_id = models.UUIDField(null=True)  # Globally unique origin ID
-    origin_object = GenericForeignKey('origin_content_type', 'origin_global_id')  # Generic foreign key for origin
+    origin_object_id = models.PositiveIntegerField(null=True)
+    origin_object = GenericForeignKey('origin_content_type', 'origin_object_id')  # Generic foreign key for origin
     
     # Generic Foreign Key setup for Destination
     destination_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="destination_flows", null=True)
     destination_global_id = models.UUIDField(null=True)  # Globally unique destination ID
-    destination_object = GenericForeignKey('destination_content_type', 'destination_global_id')
+    destination_object_id = models.PositiveIntegerField()
+    destination_object = GenericForeignKey('destination_content_type', 'destination_object_id')
 
     route_code = models.CharField(max_length=5)
     status_code = models.CharField(max_length=3, default='000')

@@ -8,8 +8,12 @@
 <p><strong>ID:</strong> {{ flow.id }}</p>
 <p><strong>Flow Id:</strong> {{ flow.flow_id }}</p>
 <p><strong>Origin Content Type:</strong> {{ flow.origin_content_type }}</p>
-<p><strong>Origin Object ID:</strong> {{ flow.origin_object_id }}</p>
+<p><strong>Origin Global ID:</strong> {{ flow.origin_global_id}}</p>
+
+<p><strong>Origin Object:</strong> {{ flow.origin_object }}</p>
+
 <p><strong>Destination Content Type:</strong> {{ flow.destination_content_type }}</p>
-<p><strong>Destination Object ID:</strong> {{ flow.destination_object_id }}</p>
+<p><strong>Destination Global ID:</strong> {{ flow.destination_global_id }}</p>
+<p><strong>Destination Object:</strong> {{ flow.destination_object }}</p>
 <!-- Add more fields as needed -->
 {% endblock %}

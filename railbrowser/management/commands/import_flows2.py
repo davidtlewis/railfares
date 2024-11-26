@@ -1,13 +1,6 @@
-# Firstly single step through import flows using the ipswich_colchester flow file
-
-
-
-
-# This is the latest effort from chatgpt:
-
 from django.core.management.base import BaseCommand
 from django.contrib.contenttypes.models import ContentType
-from your_app.models import Flow, Station, StationCluster, StationGroup
+from railbrowser.models import Flow, Station, StationCluster, StationGroup
 import csv
 
 class Command(BaseCommand):
@@ -61,11 +54,3 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error resolving {object_type} with ID {object_id}: {e}"))
             return None
-
-
-
-
-
-
-
-import the routes file : i_ route descriptions records  and ii) Route Include/Exclude Locations record 

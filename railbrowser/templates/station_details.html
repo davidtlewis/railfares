@@ -8,6 +8,12 @@
 
 <p><strong>Station Code:</strong> {{ station.nlc_code }}</p>
 <p><strong>Station Name:</strong> {{ station.name }}</p>
+<p><strong>Station UUID:</strong> {{ station.global_id }}</p>
+<p><strong>Station CRS Code:</strong> {{ station.crs_code }}</p>
+<P><strong>Station PTE Code</strong> {{ station.pte_code }}</P>
+
+
+
 
 <h2>Groups Containing this Station</h2>
 {% if station.station_groups.all %}

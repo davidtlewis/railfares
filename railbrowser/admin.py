@@ -14,7 +14,7 @@ class StationGroupAdmin(admin.ModelAdmin):
 class FlowAdmin(admin.ModelAdmin):
     list_display = ("flow_id",  "origin_object",  "destination_object","route_code","direction","toc_code",)
     search_fields = (
-        "origin_object", "destination_content_type", "destination_object", "flow_id"
+        "flow_id",
     )
 
     # def origin(self, obj):

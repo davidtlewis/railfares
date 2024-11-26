@@ -101,12 +101,12 @@ class Command(BaseCommand):
         # print('Flow data:', flow_data)
         # print('about to resolve origin')
         # Resolve origin and destination
-        flow_data['origin_content_type'], flow_data['origin_global_id'] = self._get_content_type_and_id(
+        flow_data['origin_content_type'], flow_data['origin_global_id'], flow_data['origin_object'] = self._get_content_type_and_id(
             origin_code, station_type, cluster_type, group_type
         )
         # print('Flow data:', flow_data)
         # print('about to resolve destination')
-        flow_data['destination_content_type'], flow_data['destination_global_id'] = self._get_content_type_and_id(
+        flow_data['destination_content_type'], flow_data['destination_global_id'],  flow_data['destination_object'] = self._get_content_type_and_id(
             destination_code, station_type, cluster_type, group_type
         )
         # print('Flow data:', flow_data)
@@ -117,21 +117,23 @@ class Command(BaseCommand):
     def _get_content_type_and_id(self, code, station_type, cluster_type, group_type):
         """Determine if code corresponds to a Station or Stationgroup or  StationCluster and return ContentType and ID"""
         try:
-            # Check if code corresponds to a Station
-            station = Station.objects.get(nlc_code=code)
-            return station_type, station.id
-        except Station.DoesNotExist:
-            pass
-        try:
             # Check if code corresponds to a StationGroup
             stationGroup = StationGroup.objects.get(nlc_code=code)
-            return group_type, stationGroup.id
+            return group_type, stationGroup.global_id, stationGroup
         except StationGroup.DoesNotExist:
             pass    
+    
+        try:
+            # Check if code corresponds to a Station
+            station = Station.objects.get(nlc_code=code)
+            return station_type, station.global_id, station
+        except Station.DoesNotExist:
+            pass
+
         try:
             # Check if code corresponds to a StationCluster
             cluster = StationCluster.objects.get(cluster_id=code)
-            return cluster_type, cluster.id
+            return cluster_type, cluster.global_id, cluster
         except StationCluster.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Code {code} not found in Station or StationCluster"))
             return None, None
