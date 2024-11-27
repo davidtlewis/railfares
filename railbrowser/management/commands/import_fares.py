@@ -62,6 +62,9 @@ class Command(BaseCommand):
         """Parses Fare record """
         fare =  int(line[12:20].strip())  # Fare in pence
         restriction_code = line[20:22].strip()
+        #get the restriction object
+        restriction = self._get_or_create_restriction(restriction_code)
+
 
         # Find the Flow and ticket_type record that this Fare belongs to
         flow_id = line[2:9].strip()
@@ -72,7 +75,8 @@ class Command(BaseCommand):
             'flow':flow,
             'ticket_type':ticket_type,
             'fare':fare,
-            'restriction_code':restriction_code
+            'restriction_code':restriction_code,
+            'restriction':restriction
         }
 
         return Fare(**fare_data)

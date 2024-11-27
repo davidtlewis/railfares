@@ -35,6 +35,7 @@ class Flow(models.Model):
     destination_object = GenericForeignKey('destination_content_type', 'destination_object_id')
 
     route_code = models.CharField(max_length=5)
+    route = models.ForeignKey('Route', on_delete=models.CASCADE, related_name="flows", null=True)
     status_code = models.CharField(max_length=3, default='000')
     usage_code = models.CharField(max_length=1)
     direction = models.CharField(max_length=1)
@@ -56,6 +57,8 @@ class Fare(models.Model):
     # ticket_code = models.CharField(max_length=3)
     fare = models.PositiveIntegerField(help_text="Fare in pence")  # Store fare in pence to avoid floating-point issues
     restriction_code = models.CharField(max_length=2, null=True, blank=True)
+    restriction = models.ForeignKey('Restriction', on_delete=models.SET_NULL, null=True, blank=True, related_name='fares')
+    
     # Foreign key to Restriction, if defined
     # restriction_code = models.ForeignKey(
     #     'Restriction',
@@ -141,3 +144,16 @@ class TrainRestriction(models.Model):
 
     def __str__(self):
         return f"Train Restriction {self.train_id} for {self.restriction.restriction_code}"
+
+
+class Route(models.Model):
+    route_code = models.CharField(max_length=5, unique=True)
+    description = models.CharField(max_length=16,blank=True, null=True)
+    atb_desc_1 = models.CharField(max_length=35,blank=True, null=True)
+    atb_desc_2 = models.CharField(max_length=35,blank=True, null=True)
+    atb_desc_3 = models.CharField(max_length=35,blank=True, null=True)
+    atb_desc_4 = models.CharField(max_length=35,blank=True, null=True)
+    cc_desc = models.CharField(max_length=16,blank=True, null=True)
+
+    def __str__(self):
+        return f"Route {self.route_code}: {self.description}"

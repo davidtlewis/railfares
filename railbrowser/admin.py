@@ -46,13 +46,21 @@ class TicketTypeAdmin(admin.ModelAdmin):
     list_display = ('id','ticket_code','description',   'class_of_travel','ticket_type','end_date','start_date')
     search_fields = ['description','ticket_code']
 
+class RestrictionAdmin(admin.ModelAdmin):
+    list_display = ('restriction_code','description')
+    search_fields = ['restriction_code','description']
+
+class RouteAdmin(admin.ModelAdmin):
+    list_display = ('route_code','description')
+    search_fields = ['route_code','description']
+
 admin.site.register(Station, StationAdmin)
 admin.site.register(StationCluster, StationClusterAdmin)
 admin.site.register(Flow, FlowAdmin)
 admin.site.register(Fare, FareAdmin)
 admin.site.register(TicketType, TicketTypeAdmin)
 admin.site.register(StationGroup, StationGroupAdmin)
-
+admin.site.register(Route, RouteAdmin)
 
 # Inline classes for related models
 class RestrictionDateBandInline(admin.TabularInline):

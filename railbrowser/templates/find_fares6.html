@@ -20,6 +20,7 @@
             <th>Origin</th>
             <th>Destination</th>
             <th>route code</th>
+            <th> route description</th>
             <th>direction</th>
             <th>toc_code</th>
             <th>Cros London</th>
@@ -32,6 +33,7 @@
             <td>{{ flow.origin_object }}</td>
             <td>{{ flow.destination_object }}</td>
             <td>{{ flow.route_code }}</td>
+            <td>{{ flow.route.description }}</td>
             <td>{{ flow.direction }}</td>
             <td>{{ flow.toc_code }}</td>
             <td>{{ flow.cross_london_indicator }}</td>
@@ -62,6 +64,7 @@
             <th>Max Child</th>
             <th>Fare</th>
             <th>Restriction</th>
+            <th>Restriction decription/th>
         </tr>
     </thead>
     <tbody>
@@ -116,6 +119,7 @@
             <td>{{ item.fare.ticket_type.max_children }}</td>
             <td>{{ item.fare.fare|floatformat:2 }}</td>
             <td>{{ item.fare.restriction_code|default:"None" }}</td>
+            <td>{{ item.fare.restriction.description }}</td>
         </tr>
         {% endfor %}
     </tbody>

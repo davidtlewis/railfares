@@ -28,17 +28,17 @@ class Command(BaseCommand):
                     continue
 
                 try:
-                    record_type = line[1:3].strip()  # Assume the first character defines the type of restriction record
-                    if record_type == 'R':  # Primary restriction record
+                    record_type = line[1:3].strip()  
+                    if record_type == 'RH':  # Primary restriction record
                         self._import_restriction(line)
-                    elif record_type == 'RD':  # Date band record
-                        self._import_date_band(line)
-                    elif record_type == 'T':  # Time restriction record
-                        self._import_time_restriction(line)
-                    elif record_type == 'X':  # Train restriction record
-                        self._import_train_restriction(line)
-                    else:
-                        self.stdout.write(self.style.WARNING(f"Unknown record type '{record_type}' on line {line_number}"))
+                    # elif record_type == 'RD':  # Date band record
+                    #     self._import_date_band(line)
+                    # elif record_type == 'T':  # Time restriction record
+                    #     self._import_time_restriction(line)
+                    # elif record_type == 'X':  # Train restriction record
+                    #     self._import_train_restriction(line)
+                    # else:
+                    #     self.stdout.write(self.style.WARNING(f"Unknown record type '{record_type}' on line {line_number}"))
 
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e}"))
@@ -49,8 +49,8 @@ class Command(BaseCommand):
         """Parses and saves a Restriction record"""
         # Assuming line structure is:
         # R | restriction_code (2 chars) | description (60 chars)
-        restriction_code = line[1:3].strip()
-        description = line[3:63].strip()
+        restriction_code = line[4:6]
+        description = line[6:36]
 
         # Create or update the Restriction
         restriction, created = Restriction.objects.update_or_create(
