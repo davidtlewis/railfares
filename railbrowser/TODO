@@ -1,4 +1,14 @@
 
 
 
-# import the routes file : i_ route descriptions records  and ii) Route Include/Exclude Locations record 
+# import the routes file : i_ route descriptions records  (done)  and ii) Route Include/Exclude Locations record 
+
+Station MANNINGTREE (6856) to Station COLCHESTER (6861)
+No flows found for the given origin and destination.
+
+Becuase of the direction flag - ie both ways !
+
+All flows comprehensive or do we need to do something else for long distance
+
+Station COLCHESTER (6861) to Station HYKEHAM (6310)
+No flows found for the given origin and destination.

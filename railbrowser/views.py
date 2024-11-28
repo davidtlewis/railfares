@@ -177,10 +177,16 @@ def find_fares_view5(request):
 def find_fares_view6(request):
     form = FindFaresForm(request.GET or None)
     fares_with_resolved_flows = []
+    flows = []
+    origin_station = None
+    destination_station = None
+
 
     if form.is_valid():
         origin_code = form.cleaned_data['origin']
         destination_code = form.cleaned_data['destination']
+        origin_station = None
+        destination_station = None
 
         try:
             # todo  - extend clusters to those including the station group as well as the station itself
@@ -236,7 +242,9 @@ def find_fares_view6(request):
     return render(request, 'find_fares6.html', {
         'form': form,
         'fares': fares_with_resolved_flows,
-        'flows': flows
+        'flows': flows,
+        'origin_station': origin_station,
+        'destination_station': destination_station,
     })
 
 
