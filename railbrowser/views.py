@@ -1,178 +1,12 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from .models import Fare, Flow, Station, StationCluster, StationGroup
-from .forms import FindFaresForm, ClusterSearchForm, StationSearchForm, FlowSearchForm, StationGroupSearchForm
+from .forms import FindFaresForm, ClusterSearchForm, StationSearchForm, FlowSearchForm, StationGroupSearchForm, RouteSearchForm
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.db.models import Prefetch
 from django.db import connection
-
-def find_fares_view4(request):
-    form = FindFaresForm(request.GET or None)
-    fares_with_resolved_flows = []  # Initialize results
-
-    if form.is_valid():
-        origin_code = form.cleaned_data['origin']
-        destination_code = form.cleaned_data['destination']
-
-        try:
-            # Get the origin and destination stations
-            origin_station = Station.objects.get(nlc_code=origin_code)
-            destination_station = Station.objects.get(nlc_code=destination_code)
-
-            # Get associated clusters and groups
-            origin_clusters = StationCluster.objects.filter(stations=origin_station)
-            destination_clusters = StationCluster.objects.filter(stations=destination_station)
-            #TODO Probably need to make the clusters include groups as well.  This will invlove change in model and the elect query above
-
-
-            origin_groups = StationGroup.objects.filter(stations=origin_station)
-            destination_groups = StationGroup.objects.filter(stations=destination_station)
-
-            print(f'Origin Clusters: {list(origin_clusters.values_list("id", flat=True))}')
-            print(f'Destination Clusters: {list(destination_clusters.values_list("id", flat=True))}')
-            print(f'Origin Groups: {list(origin_groups.values_list("id", flat=True))}')
-            print(f'Destination Groups: {list(destination_groups.values_list("id", flat=True))}')
-
-            
-            # Get ContentTypes for Station, StationCluster, and StationGroup
-            station_type = ContentType.objects.get_for_model(Station)
-            cluster_type = ContentType.objects.get_for_model(StationCluster)
-            group_type = ContentType.objects.get_for_model(StationGroup)
-
-            # Combine IDs for origin and destination
-            origin_ids = (
-                [origin_station.id]
-                + list(origin_clusters.values_list('id', flat=True))
-                + list(origin_groups.values_list('id', flat=True))
-            )
-            destination_ids = (
-                [destination_station.id]
-                + list(destination_clusters.values_list('id', flat=True))
-                + list(destination_groups.values_list('id', flat=True))
-            )
-
-            # Query relevant flows
-            flows = Flow.objects.filter(
-                Q(origin_content_type=station_type, origin_object_id=origin_station.id) |
-                Q(origin_content_type=cluster_type, origin_object_id__in=origin_clusters.values_list('id', flat=True)) |
-                Q(origin_content_type=group_type, origin_object_id__in=origin_groups.values_list('id', flat=True)),
-                Q(destination_content_type=station_type, destination_object_id=destination_station.id) |
-                Q(destination_content_type=cluster_type, destination_object_id__in=destination_clusters.values_list('id', flat=True)) |
-                Q(destination_content_type=group_type, destination_object_id__in=destination_groups.values_list('id', flat=True)),
-            )
-
-             # Debug: Print flows retrieved
-            print(f'Flows: {list(flows.values_list("id", flat=True))}')
-            print(f'lenth of flows: {len(flows)}')
-
-            # Query fares for these flows
-            fares = Fare.objects.filter(flow__in=flows).select_related('flow', 'ticket_type')
-
-            # Add resolved origin and destination for each fare
-            for fare in fares:
-                flow = fare.flow
-                fares_with_resolved_flows.append({
-                    'fare': fare,
-                    'origin': _resolve_generic(flow.origin_content_type, flow.origin_object_id),
-                    'destination': _resolve_generic(flow.destination_content_type, flow.destination_object_id),
-                })
-            print(f'Length of fares: {len(fares)}') 
-            print(f'Length of fares_with_resolved_flows: {len(fares_with_resolved_flows)}')
-
-
-            for item in fares_with_resolved_flows:
-                print(f"Origin: {item['origin']}, Destination: {item['destination']}")
-
-        except Station.DoesNotExist:
-            form.add_error(None, "One or both station codes are invalid.")
-
-    return render(request, 'find_fares4.html', {
-        'form': form,
-        'fares': fares_with_resolved_flows,  # Pass as `fares` for template compatibility
-    })
-
-def find_fares_view5(request):
-    form = FindFaresForm(request.GET or None)
-    fares_with_resolved_flows = []
-
-    if form.is_valid():
-        origin_code = form.cleaned_data['origin']
-        destination_code = form.cleaned_data['destination']
-
-        try:
-            origin_station = Station.objects.get(nlc_code=origin_code)
-            destination_station = Station.objects.get(nlc_code=destination_code)
-
-            origin_groups = StationGroup.objects.filter(stations=origin_station)
-            destination_groups = StationGroup.objects.filter(stations=destination_station)
-
-            origin_clusters = StationCluster.objects.filter(stations=origin_station)
-            destination_clusters = StationCluster.objects.filter(stations=destination_station)
-
-            origin_groups = StationGroup.objects.filter(stations=origin_station)
-            destination_groups = StationGroup.objects.filter(stations=destination_station)
-
-            station_type = ContentType.objects.get_for_model(Station)
-            cluster_type = ContentType.objects.get_for_model(StationCluster)
-            group_type = ContentType.objects.get_for_model(StationGroup)
-
-            # origin_ids = [origin_station.id] + list(origin_clusters.values_list('id', flat=True)) + list(origin_groups.values_list('id', flat=True))
-            # destination_ids = [destination_station.id] + list(destination_clusters.values_list('id', flat=True)) + list(destination_groups.values_list('id', flat=True))
-
-            origin_ids = [origin_station.id] + list(origin_clusters.values_list('id', flat=True)) + list(origin_groups.values_list('id', flat=True))
-            destination_ids = [destination_station.id] + list(destination_clusters.values_list('id', flat=True)) + list(destination_groups.values_list('id', flat=True))
-
-
-            #debug print
-            print(f'Origin Station: {origin_station}')
-            print(f'Destination Station: {destination_station}')
-            print(f'Origin Groups: {origin_groups}')
-            print(f'Desctination Groups: {destination_groups}')
-            
-            print(f'Origin Clusters: {list(origin_clusters.values_list("id", flat=True))}')
-            print(f'Destination Clusters: {list(destination_clusters.values_list("id", flat=True))}')
-            print(f'Origin Groups: {list(origin_groups.values_list("id", flat=True))}')
-            print(f'Destination Groups: {list(destination_groups.values_list("id", flat=True))}')
-            print(f'Origin IDs: {origin_ids}')
-            print(f'Destination IDs: {destination_ids}')
-
-            #this is plain wrong !
-            flows = Flow.objects.filter(
-                Q(origin_content_type=station_type, origin_object_id__in=origin_ids),
-                Q(destination_content_type=station_type, destination_object_id__in=destination_ids),
-            )
-
-            print(f'Flows: {list(flows.values_list("id", flat=True))}')
-
-            fares = Fare.objects.filter(flow__in=flows).select_related('flow', 'ticket_type')
-
-            for fare in fares:
-                flow = fare.flow
-                origin = _resolve_generic(flow.origin_content_type, flow.origin_object_id)
-                destination = _resolve_generic(flow.destination_content_type, flow.destination_object_id)
-
-                # Add type info to each object
-                origin_type = type(origin).__name__ if origin else None
-                destination_type = type(destination).__name__ if destination else None
-
-                fares_with_resolved_flows.append({
-                    'fare': fare,
-                    'origin': origin,
-                    'origin_type': origin_type,
-                    'destination': destination,
-                    'destination_type': destination_type,
-                })
-
-        except Station.DoesNotExist:
-            form.add_error(None, "One or both station codes are invalid.")
-
-    return render(request, 'find_fares5.html', {
-        'form': form,
-        'fares': fares_with_resolved_flows,
-    })
-
 
 def find_fares_view6(request):
     form = FindFaresForm(request.GET or None)
@@ -185,6 +19,7 @@ def find_fares_view6(request):
     if form.is_valid():
         origin_code = form.cleaned_data['origin']
         destination_code = form.cleaned_data['destination']
+        single_fares_only = form.cleaned_data['single_fares_only']
         origin_station = None
         destination_station = None
 
@@ -210,19 +45,22 @@ def find_fares_view6(request):
                 Q(destination_global_id__in=destination_global_ids)
             )
 
-            #debug print
-            # print(f'Origin Station: {origin_station}')
-            # print(f'Destination Station: {destination_station}')
-            # print(f'Origin IDs: {origin_global_ids}')
-            # print(f'Destination IDs: {destination_global_ids}')
             print(f'Flows: {list(flows.values_list("id", flat=True))}')
 
             fares = Fare.objects.filter(flow__in=flows).select_related('flow', 'ticket_type')
 
+            if single_fares_only:
+                fares = fares.filter(
+                     Q(ticket_type__ticket_type='S') &
+                    Q(ticket_type__class_of_travel='2')
+                )
+
             for fare in fares:
+                fare.fare = fare.fare / 100
                 flow = fare.flow
                 origin = _resolve_generic(flow.origin_content_type, flow.origin_object_id)
                 destination = _resolve_generic(flow.destination_content_type, flow.destination_object_id)
+               
                 # Add type info to each object
                 origin_type = type(origin).__name__ if origin else None
                 destination_type = type(destination).__name__ if destination else None
@@ -246,8 +84,6 @@ def find_fares_view6(request):
         'origin_station': origin_station,
         'destination_station': destination_station,
     })
-
-
 
 
 def _resolve_generic(content_type, object_id):
@@ -419,3 +255,24 @@ def flow_detail_view(request, flow_id):
 
 def welcome_view(request):
     return render(request, 'welcome.html')
+
+
+def route_search_view(request):
+    form = RouteSearchForm(request.GET or None)
+    routes = []
+
+    if form.is_valid():
+        route_code = form.cleaned_data.get('route_code')
+        description = form.cleaned_data.get('description')
+
+        routes = Route.objects.all()
+
+        if route_code:
+            routes = routes.filter(route_code__icontains=route_code)
+        if description:
+            routes = routes.filter(description__icontains=description)
+
+    return render(request, 'route_search.html', {
+        'form': form,
+        'routes': routes,
+    })

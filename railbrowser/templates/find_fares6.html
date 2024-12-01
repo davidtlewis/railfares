@@ -22,9 +22,6 @@
 {% endif %}
 {% endif %}
 
-
-
-
 {% if flows %}
 <h2>Results</h2>
 <table>
@@ -61,9 +58,6 @@
 <p>No flows found for the given origin and destination.</p>
 {% endif %}
 {% endif %}
-
-
-
 
 {% if fares %}
 <h2>Results</h2>
@@ -134,7 +128,7 @@
             <td>{{ item.fare.ticket_type.class_of_travel }}</td>
             <td>{{ item.fare.ticket_type.max_adults }}</td>
             <td>{{ item.fare.ticket_type.max_children }}</td>
-            <td>{{ item.fare.fare|floatformat:2 }}</td>
+            <td>{{ item.fare.fare |floatformat:2 }}</td>
             <td>{{ item.fare.restriction_code|default:"None" }}</td>
             <td>{{ item.fare.restriction.description }}</td>
         </tr>

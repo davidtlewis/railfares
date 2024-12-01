@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Routes{% endblock %}
+
+{% block content %}
+<h1>Search Routes</h1>
+<form method="get">
+    {{ form.as_p }}
+    <button type="submit">Search</button>
+</form>
+
+{% if routes %}
+<h2>Results</h2>
+<ul>
+    {% for route in routes %}
+    <li>
+        <strong>Route Code:</strong> {{ route.route_code }}<br>
+        <strong>Description:</strong> {{ route.description }}<br>
+        <strong>Start Date:</strong> {{ route.start_date }}<br>
+        <strong>End Date:</strong> {{ route.end_date }}<br>
+        <!-- Add more fields as needed -->
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

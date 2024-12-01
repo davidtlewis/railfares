@@ -13,6 +13,17 @@ class FindFaresForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'Enter Destination Code'}),
         required=True,
     )
+    single_fares_only = forms.BooleanField(
+        label="Single Fares Only",
+        required=False,
+        initial=False,
+    )
+
+
+
+class RouteSearchForm(forms.Form):
+    route_code = forms.CharField(label='Route Code', max_length=5, required=False)
+    description = forms.CharField(label='Description', max_length=16, required=False)
 
 class ClusterSearchForm(forms.Form):
     search_query = forms.CharField(
