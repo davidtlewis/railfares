@@ -15,10 +15,23 @@ def find_fares_view6(request):
     origin_station = None
     destination_station = None
 
-
     if form.is_valid():
-        origin_code = form.cleaned_data['origin']
-        destination_code = form.cleaned_data['destination']
+        # Get station codes from the hidden fields
+        origin_code = form.cleaned_data.get('origin_code')
+        destination_code = form.cleaned_data.get('destination_code')
+
+        # Fallback: If hidden fields are empty, resolve by name
+        origin_query = form.cleaned_data.get('origin_name')
+        destination_query = form.cleaned_data.get('destination_name')
+        
+        print(f'Origin code: {origin_code}')
+        print(f'Destination code: {destination_code}')
+        print(f'Origin query: {origin_query}')
+        print(f'Destination query: {destination_query}')
+        
+        # origin_code = form.cleaned_data['origin']
+        # destination_code = form.cleaned_data['destination']
+        
         single_fares_only = form.cleaned_data['single_fares_only']
         origin_station = None
         destination_station = None
@@ -276,3 +289,17 @@ def route_search_view(request):
         'form': form,
         'routes': routes,
     })
+
+def station_autocomplete(request):
+    query = request.GET.get("q", "")  # Get the query string from the request
+    results = []
+
+    if query:
+        # Find stations whose names match the query
+        stations = Station.objects.filter(
+            Q(name__icontains=query) | Q(nlc_code__icontains=query)
+        ).values("name", "nlc_code")
+
+        results = [{"label": f"{station['name']} ({station['nlc_code']})", "value": station["nlc_code"]} for station in stations]
+
+    return JsonResponse(results, safe=False)

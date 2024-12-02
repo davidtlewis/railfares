@@ -74,6 +74,35 @@
             background-color: #111;
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"> </script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+
+    <script>
+        $(document).ready(function () {
+            // Autocomplete for fields with data-autocomplete-url
+            $("input[data-autocomplete-url]").each(function () {
+                const inputField = $(this);
+                const hiddenField = $("#" + inputField.attr("id").replace("_name", "_code"));
+                const url = inputField.data("autocomplete-url");
+
+                inputField.autocomplete({
+                    source: function (request, response) {
+                        $.getJSON(url, { q: request.term }, function (data) {
+                            response(data);
+                        });
+                    },
+                    minLength: 2,  // Start suggesting after 2 characters
+                    select: function (event, ui) {
+                        inputField.val(ui.item.label);  // Display station name
+                        hiddenField.val(ui.item.value);  // Set station code
+                        return false;
+                    }
+                });
+            });
+        });
+    </script>
+
 </head>
 
 <body>

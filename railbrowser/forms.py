@@ -1,6 +1,35 @@
 from django import forms
 
 class FindFaresForm(forms.Form):
+    origin_name = forms.CharField(
+        label="Origin Station",
+        widget=forms.TextInput(attrs={
+            "placeholder": "Enter Origin Station Name",
+            "class": "form-control",
+            "data-autocomplete-url": "/station/autocomplete/",  # Set autocomplete endpoint
+        }),
+    )
+
+    origin_code = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    destination_name = forms.CharField(
+        label="Destination Station",
+        widget=forms.TextInput(attrs={
+            "placeholder": "Enter Destination Station Name",
+            "class": "form-control",
+            "data-autocomplete-url": "/station/autocomplete/",  # Set autocomplete endpoint
+        }),
+    )
+
+    destination_code = forms.CharField(widget=forms.HiddenInput(), required=False)
+    
+    single_fares_only = forms.BooleanField(
+        label="Single Fares Only",
+        required=False,
+        initial=False,
+    )
+
+class FindFaresForm_old(forms.Form):
     origin = forms.CharField(
         max_length=4,
         label="Origin Station Code",
@@ -18,8 +47,6 @@ class FindFaresForm(forms.Form):
         required=False,
         initial=False,
     )
-
-
 
 class RouteSearchForm(forms.Form):
     route_code = forms.CharField(label='Route Code', max_length=5, required=False)

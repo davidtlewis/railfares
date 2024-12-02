@@ -14,4 +14,5 @@ urlpatterns = [
     path('station-groups/search/', station_group_search_view, name='station_group_search'),
     path('station-groups/<str:group_id>/', station_group_detail_view, name='station_group_details'),
      path('route/search/', route_search_view, name='route_search'),
+     path('station/autocomplete/', station_autocomplete, name='station_autocomplete'),
 ]
