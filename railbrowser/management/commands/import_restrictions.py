@@ -1,10 +1,12 @@
 import os
 import datetime
 from django.core.management.base import BaseCommand
-from railbrowser.models import Restriction, RestrictionDateBand, TimeRestriction, TrainRestriction
+from railbrowser.models import Restriction, TimeRestrictionDateBand, TimeRestriction, TrainRestriction, Station
 
 class Command(BaseCommand):
     help = "Imports restrictions data from flat files into the database"
+    # all a bit knackers as the sub rsstrictions are suposed to be lined to the retriction header by a _combination_ of cf_mkr AND restriction code
+    # but I don't undersatnd how it all fits together yet
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -29,19 +31,22 @@ class Command(BaseCommand):
 
                 try:
                     record_type = line[1:3].strip()  
-                    if record_type == 'RH':  # Primary restriction record
-                        self._import_restriction(line)
-                    # elif record_type == 'RD':  # Date band record
-                    #     self._import_date_band(line)
-                    # elif record_type == 'T':  # Time restriction record
+                    # if record_type == 'RH':  # Primary restriction record
+                    #     self._import_restriction(line)
+                    
+                    # elif record_type == 'TR':  # Time restriction record
                     #     self._import_time_restriction(line)
+
+                    if record_type == 'TD':  # Time restriction Date band record # need to do this AFTER the TR records
+                        self._import_time_restriction_date_band(line)
+
                     # elif record_type == 'X':  # Train restriction record
                     #     self._import_train_restriction(line)
                     # else:
                     #     self.stdout.write(self.style.WARNING(f"Unknown record type '{record_type}' on line {line_number}"))
 
                 except Exception as e:
-                    self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e}"))
+                    self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e} Line {line}"))
 
         self.stdout.write(self.style.SUCCESS("Restrictions data import completed successfully."))
 
@@ -49,13 +54,27 @@ class Command(BaseCommand):
         """Parses and saves a Restriction record"""
         # Assuming line structure is:
         # R | restriction_code (2 chars) | description (60 chars)
+        cf_mkr = line[3:4]
         restriction_code = line[4:6]
         description = line[6:36]
+        description_out = line[36:86]
+        description_rtn= line[86:136]
+        type_out = line[136:137]
+        type_in = line[137:138]
+        change_ind = line[138:139]
 
         # Create or update the Restriction
         restriction, created = Restriction.objects.update_or_create(
             restriction_code=restriction_code,
-            defaults={'description': description}
+            cf_mkr = cf_mkr,
+            defaults={
+                'description': description,
+                'description_out': description_out,
+                'description_rtn': description_rtn,
+                'type_out': type_out,
+                'type_in': type_in,
+                'change_ind': change_ind,
+                }
         )
 
         if created:
@@ -63,20 +82,28 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS(f"Updated Restriction {restriction_code}"))
 
-    def _import_date_band(self, line):
-        """Parses and saves a RestrictionDateBand record"""
-        # Assuming line structure is:
-        # D | restriction_code (2 chars) | start_date (8 chars, ddmmyyyy) | end_date (8 chars, ddmmyyyy)
-        restriction_code = line[1:3].strip()
-        start_date = self._parse_date(line[3:11].strip())
-        end_date = self._parse_date(line[11:19].strip())
-
+    def _import_time_restriction_date_band(self, line):
+        """Parses and saves a TimeRestrictionDateBand record"""
+        cf_mkr = line[3:4]
+        restriction_code = line[4:6]
+        sequence_no = line[6:10]
+        out_ret = line[10:11]
+        date_from = line[11:15] #need to fix to get right year !
+        date_to = line[15:19] #need to fix to get right year !
+        days_of_week = line[19:26]
+        
         try:
-            restriction = Restriction.objects.get(restriction_code=restriction_code)
-            date_band, created = RestrictionDateBand.objects.update_or_create(
-                restriction=restriction,
-                start_date=start_date,
-                end_date=end_date
+            time_restriction = TimeRestriction.objects.get(restriction__restriction_code=restriction_code, cf_mkr=cf_mkr, sequence_no=sequence_no) #now thinking the relationship should be the other way round.  as there are lots of locations in each time recrod code.
+            # TODO check out BRfares again
+
+            time_date_band, created = TimeRestrictionDateBand.objects.update_or_create(
+                time_restriction=time_restriction,
+                out_ret = out_ret,
+                date_from=self._parse_short_date(date_from),
+                date_to=self._parse_short_date(date_to),
+                defaults={
+                    'days_of_week': days_of_week,
+                }
             )
 
             if created:
@@ -89,23 +116,31 @@ class Command(BaseCommand):
 
     def _import_time_restriction(self, line):
         """Parses and saves a TimeRestriction record"""
-        # Assuming line structure is:
-        # T | restriction_code (2 chars) | time_code (10 chars) | start_time (4 chars, hhmm) | end_time (4 chars, hhmm) | days_of_week (7 chars)
-        restriction_code = line[1:3].strip()
-        time_code = line[3:13].strip()
-        start_time = self._parse_time(line[13:17].strip())
-        end_time = self._parse_time(line[17:21].strip())
-        days_of_week = line[21:28].strip()  # e.g., "MTWTFSS" for Monday to Sunday
+        cf_mkr = line[3:4]
+        restriction_code = line[4:6]
+        sequence_no = line[6:10]
+        out_ret = line[10:11]
+        time_from = line[11:15]
+        time_to = line[15:19]
+        arr_dep_via = line[19:20]
+        location = line[20:23] #crs code !
 
         try:
             restriction = Restriction.objects.get(restriction_code=restriction_code)
+            if location != "   ":
+                station= Station.objects.get(crs_code=location)
+            else:
+                station = None 
             time_restriction, created = TimeRestriction.objects.update_or_create(
                 restriction=restriction,
-                time_code=time_code,
+                sequence_no = sequence_no,
+                out_ret = out_ret,
+                cf_mkr = cf_mkr,
                 defaults={
-                    'start_time': start_time,
-                    'end_time': end_time,
-                    'days_of_week': days_of_week
+                    'time_from': self._parse_time(time_from),
+                    'time_to': self._parse_time(time_to),
+                    'arr_dep_via': arr_dep_via,
+                    'location': station
                 }
             )
 
@@ -153,6 +188,15 @@ class Command(BaseCommand):
             return None
         try:
             return datetime.datetime.strptime(date_str, "%d%m%Y").date()
+        except ValueError:
+            return None
+
+    def _parse_short_date(self, date_str):
+        """Parses date from MMDD format to datetime.date or None"""
+        if date_str == '00000000' or not date_str.strip():  # Use '00000000' or empty for null dates
+            return None
+        try:
+            return datetime.datetime.strptime(date_str, "%m%d").date()  #TODO need to interpret these in terms of the headline date bands in records "RD – Restriction Dates record"
         except ValueError:
             return None
 

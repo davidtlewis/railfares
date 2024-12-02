@@ -3,8 +3,8 @@ from railbrowser.models import *
 
 
 class StationAdmin(admin.ModelAdmin):
-    list_display = ('global_id','nlc_code','name','pte_code')
-    search_fields = ["nlc_code","name","pte_code"]
+    list_display = ('global_id','nlc_code','name','pte_code','crs_code')
+    search_fields = ["nlc_code","name","pte_code",'crs_code']
 
 class StationGroupAdmin(admin.ModelAdmin):
     list_display = ('global_id','nlc_code','name', 'group_id')
@@ -68,10 +68,15 @@ class RestrictionDateBandInline(admin.TabularInline):
     extra = 1  # Number of empty forms to display in the admin
     fields = ['start_date', 'end_date']  # Fields to display in the inline
 
+class TimeRestrictionDateBandInline(admin.TabularInline):
+    model = TimeRestrictionDateBand
+    extra = 1  # Number of empty forms to display in the admin
+    fields = ['date_from', 'date_to','days_of_week']  # Fields to display in the inline
+
 class TimeRestrictionInline(admin.TabularInline):
     model = TimeRestriction
     extra = 1
-    fields = ['time_code', 'start_time', 'end_time', 'days_of_week']
+    fields = ['sequence_no', 'out_ret', 'time_from', 'time_to', 'arr_dep_via', 'location']
 
 class TrainRestrictionInline(admin.TabularInline):
     model = TrainRestriction
@@ -83,7 +88,7 @@ class TrainRestrictionInline(admin.TabularInline):
 class RestrictionAdmin(admin.ModelAdmin):
     list_display = ['restriction_code', 'description']  # Fields to display in the main list
     search_fields = ['restriction_code', 'description']  # Enable searching by these fields
-    inlines = [RestrictionDateBandInline, TimeRestrictionInline, TrainRestrictionInline]  # Attach inlines
+    inlines = [RestrictionDateBandInline, TimeRestrictionInline,  TrainRestrictionInline]  # Attach inlines
 
 # Registering related models independently (optional)
 @admin.register(RestrictionDateBand)
@@ -93,8 +98,13 @@ class RestrictionDateBandAdmin(admin.ModelAdmin):
 
 @admin.register(TimeRestriction)
 class TimeRestrictionAdmin(admin.ModelAdmin):
-    list_display = ['restriction', 'time_code', 'start_time', 'end_time', 'days_of_week']
-    search_fields = ['restriction__restriction_code', 'time_code']
+    list_display = ['restriction', 'out_ret', 'time_from', 'time_to', 'arr_dep_via', 'location']
+    search_fields = ['restriction__restriction_code', 'location']
+
+@admin.register(TimeRestrictionDateBand)
+class TimeRestrictionDateBandAdmin(admin.ModelAdmin):
+    list_display = ['time_restriction', 'date_from', 'date_to', 'days_of_week',  'out_ret']
+    search_fields = ['time_restriction__restriction__restriction_code']
 
 @admin.register(TrainRestriction)
 class TrainRestrictionAdmin(admin.ModelAdmin):

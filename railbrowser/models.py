@@ -59,14 +59,6 @@ class Fare(models.Model):
     restriction_code = models.CharField(max_length=2, null=True, blank=True)
     restriction = models.ForeignKey('Restriction', on_delete=models.SET_NULL, null=True, blank=True, related_name='fares')
     
-    # Foreign key to Restriction, if defined
-    # restriction_code = models.ForeignKey(
-    #     'Restriction',
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True,
-    #     related_name='flows'
-    # )
 
     def __str__(self):
         return f"Fare for Flow ID {self.flow.flow_id}"
@@ -113,6 +105,12 @@ class StationCluster(models.Model):
 class Restriction(models.Model):
     restriction_code = models.CharField(max_length=2, unique=True)
     description = models.CharField(max_length=255, blank=True, null=True)
+    cf_mkr = models.CharField(max_length=1, blank=True, null=True)
+    description_out = models.CharField(max_length=50, blank=True, null=True)
+    description_rtn = models.CharField(max_length=50, blank=True, null=True)
+    type_out = models.CharField(max_length=1, blank=True, null=True)
+    type_in = models.CharField(max_length=1, blank=True, null=True)
+    change_ind = models.CharField(max_length=1, blank=True, null=True)
 
     def __str__(self):
         return f"Restriction {self.restriction_code}"
@@ -127,13 +125,27 @@ class RestrictionDateBand(models.Model):
 
 class TimeRestriction(models.Model):
     restriction = models.ForeignKey(Restriction, on_delete=models.CASCADE, related_name="time_restrictions")
-    time_code = models.CharField(max_length=10)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    cf_mkr = models.CharField(max_length=1, blank=True, null=True)
+    sequence_no = models.PositiveIntegerField(blank=True, null=True)
+    out_ret = models.CharField(max_length=1, choices=[('O', 'Out'), ('R', 'Return')])
+    time_from = models.TimeField()
+    time_to = models.TimeField()
+    arr_dep_via = models.CharField(max_length=1, choices=[('A', 'Arrivals at   '), ('D', 'Departures from'), ('V', 'Changingg at')])
+    location = models.ForeignKey(Station, on_delete=models.CASCADE, related_name="time_restrictions", null=True, blank=True)
+
+    def __str__(self):
+        return f"Time Restriction {self.time_from} to {self.time_to} for {self.restriction.restriction_code}"
+
+
+class TimeRestrictionDateBand(models.Model):
+    time_restriction = models.ForeignKey(TimeRestriction, on_delete=models.CASCADE, related_name="date_bands",blank=True, null=True)
+    out_ret = models.CharField(max_length=1, choices=[('O', 'Out'), ('R', 'Return')])
+    date_from = models.DateField(null=True, blank=True)
+    date_to =models.DateField(null=True, blank=True)
     days_of_week = models.CharField(max_length=7)  # e.g., "MTWTFSS" for Mon-Sun
 
     def __str__(self):
-        return f"Time Restriction {self.time_code} for {self.restriction.restriction_code}"
+        return f"Time Restriction {self.date_from} to {self.date_to} for {self.time_restriction}"
 
 class TrainRestriction(models.Model):
     restriction = models.ForeignKey(Restriction, on_delete=models.CASCADE, related_name="train_restrictions")
