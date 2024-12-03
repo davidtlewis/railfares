@@ -1,4 +1,5 @@
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
 from .views import *
 
 urlpatterns = [
@@ -15,4 +16,11 @@ urlpatterns = [
     path('station-groups/<str:group_id>/', station_group_detail_view, name='station_group_details'),
      path('route/search/', route_search_view, name='route_search'),
      path('station/autocomplete/', station_autocomplete, name='station_autocomplete'),
+     path('restriction/<str:restriction_code>/', restriction_detail_view, name='restriction_details'),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

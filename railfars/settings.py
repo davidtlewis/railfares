@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-3otzd+4p1l%973ix86m1p7z4zr^0!@clg^)nd^wjuc6-rw)4e*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','192.168.1.211']
+ALLOWED_HOSTS = ['127.0.0.1','192.168.1.211','rail.dtlewis.com']
 
 
 # Application definition
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'railbrowser',
     'django_extensions',
+    'debug_toolbar',
     
 ]
 
@@ -50,6 +51,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
 ]
 
 ROOT_URLCONF = 'railfars.urls'
@@ -148,6 +151,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda request: True,  # Always show the toolbar
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/

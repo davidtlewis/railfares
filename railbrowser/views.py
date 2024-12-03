@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .models import Fare, Flow, Station, StationCluster, StationGroup
+from .models import Fare, Flow, Station, StationCluster, StationGroup, Restriction, Route
 from .forms import FindFaresForm, ClusterSearchForm, StationSearchForm, FlowSearchForm, StationGroupSearchForm, RouteSearchForm
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
@@ -303,3 +303,14 @@ def station_autocomplete(request):
         results = [{"label": f"{station['name']} ({station['nlc_code']})", "value": station["nlc_code"]} for station in stations]
 
     return JsonResponse(results, safe=False)
+
+
+
+def restriction_detail_view(request, restriction_code):
+    restriction = get_object_or_404(Restriction, restriction_code=restriction_code)
+    time_restrictions = restriction.time_restrictions.all()
+    return render(request, 'restriction_detail.html', {
+        'restriction': restriction,
+        'time_restrictions': time_restrictions,
+    })
+    

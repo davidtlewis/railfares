@@ -12,8 +12,8 @@
 </form>
 
 {% if origin_station and destination_station %}
-<h2>Results</h2>
-{{ origin_station }} to {{ destination_station }}
+<h2>Results for
+    {{ origin_station }} to {{ destination_station }}</h2>
 
 {% else %}
 {% if form.is_bound %}
@@ -22,7 +22,7 @@
 {% endif %}
 
 {% if flows %}
-<h2>Results</h2>
+<h2>Flows</h2>
 <table>
     <thead>
         <tr>
@@ -59,7 +59,7 @@
 {% endif %}
 
 {% if fares %}
-<h2>Results</h2>
+<h2>Fares</h2>
 <table>
     <thead>
         <tr>
@@ -128,7 +128,15 @@
             <td>{{ item.fare.ticket_type.max_adults }}</td>
             <td>{{ item.fare.ticket_type.max_children }}</td>
             <td>{{ item.fare.fare |floatformat:2 }}</td>
-            <td>{{ item.fare.restriction_code|default:"None" }}</td>
+            <td>
+                {% if item.fare.restriction_code != "" %}
+                <a href="{% url 'restriction_details' item.fare.restriction_code %}">
+                    {{ item.fare.restriction_code|default:"None" }}
+                </a>
+                {% else %}
+                None
+                {% endif %}
+            </td>
             <td>{{ item.fare.restriction.description }}</td>
         </tr>
         {% endfor %}

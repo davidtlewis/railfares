@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Restriction Detail{% endblock %}
+
+{% block content %}
+<h1>Restriction Detail</h1>
+
+<p><strong>Restriction Code:</strong> {{ restriction.restriction_code }}</p>
+<p><strong>Description:</strong> {{ restriction.description }}</p>
+<p><strong>Description Out:</strong> {{ restriction.description_out }}</p>
+<p><strong>Description Return:</strong> {{ restriction.description_rtn }}</p>
+<p><strong>Type Out:</strong> {{ restriction.type_out }}</p>
+<p><strong>Type In:</strong> {{ restriction.type_in }}</p>
+<p><strong>Change Indicator:</strong> {{ restriction.change_ind }}</p>
+
+<h2>Time Restrictions</h2>
+{% if time_restrictions %}
+<table>
+    <thead>
+        <tr>
+            <th>Sequence No</th>
+            <th>Out/Return</th>
+            <th>Time From</th>
+            <th>Time To</th>
+            <th>Arr/Dep/Via</th>
+            <th>Location</th>
+            <th>Date Bands</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for time_restriction in time_restrictions %}
+        <tr>
+            <td>{{ time_restriction.sequence_no }}</td>
+            <td>{{ time_restriction.get_out_ret_display }}</td>
+            <td>{{ time_restriction.time_from }}</td>
+            <td>{{ time_restriction.time_to }}</td>
+            <td>{{ time_restriction.get_arr_dep_via_display }}</td>
+            <td>{{ time_restriction.location }}</td>
+            <td>
+                {% if time_restriction.date_bands.all %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date From</th>
+                            <th>Date To</th>
+                            <th>Days of Week</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for date_band in time_restriction.date_bands.all %}
+                        <tr>
+                            <td>{{ date_band.date_from }}</td>
+                            <td>{{ date_band.date_to }}</td>
+                            <td>{{ date_band.days_of_week }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No Date Bands</p>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No Time Restrictions</p>
+{% endif %}
+
+{% endblock %}

@@ -98,13 +98,16 @@ class RestrictionDateBandAdmin(admin.ModelAdmin):
 
 @admin.register(TimeRestriction)
 class TimeRestrictionAdmin(admin.ModelAdmin):
-    list_display = ['restriction', 'out_ret', 'time_from', 'time_to', 'arr_dep_via', 'location']
+    list_display = ['restriction', 'sequence_no', 'out_ret', 'time_from', 'time_to', 'arr_dep_via', 'location']
     search_fields = ['restriction__restriction_code', 'location']
+    raw_id_fields = ('restriction',)  # Use raw_id_fields for foreign keys
 
 @admin.register(TimeRestrictionDateBand)
 class TimeRestrictionDateBandAdmin(admin.ModelAdmin):
     list_display = ['time_restriction', 'date_from', 'date_to', 'days_of_week',  'out_ret']
     search_fields = ['time_restriction__restriction__restriction_code']
+    raw_id_fields = ('time_restriction',)  # Use raw_id_fields for foreign keys
+
 
 @admin.register(TrainRestriction)
 class TrainRestrictionAdmin(admin.ModelAdmin):

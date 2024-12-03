@@ -29,24 +29,24 @@ class Command(BaseCommand):
                 if line.startswith("/"):  # Skip comments
                     continue
 
-                try:
-                    record_type = line[1:3].strip()  
-                    # if record_type == 'RH':  # Primary restriction record
-                    #     self._import_restriction(line)
-                    
-                    # elif record_type == 'TR':  # Time restriction record
-                    #     self._import_time_restriction(line)
+                # try:
+                record_type = line[1:3].strip()  
+                # if record_type == 'RH':  # Primary restriction record
+                #     self._import_restriction(line)
+                
+                # elif record_type == 'TR':  # Time restriction record
+                #     self._import_time_restriction(line)
 
-                    if record_type == 'TD':  # Time restriction Date band record # need to do this AFTER the TR records
-                        self._import_time_restriction_date_band(line)
+                if record_type == 'TD':  # Time restriction Date band record # need to do this AFTER the TR records
+                    self._import_time_restriction_date_band(line)
 
-                    # elif record_type == 'X':  # Train restriction record
-                    #     self._import_train_restriction(line)
-                    # else:
-                    #     self.stdout.write(self.style.WARNING(f"Unknown record type '{record_type}' on line {line_number}"))
+                # elif record_type == 'X':  # Train restriction record
+                #     self._import_train_restriction(line)
+                # else:
+                #     self.stdout.write(self.style.WARNING(f"Unknown record type '{record_type}' on line {line_number}"))
 
-                except Exception as e:
-                    self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e} Line {line}"))
+                # except Exception as e:
+                #     self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e} Line {line}"))
 
         self.stdout.write(self.style.SUCCESS("Restrictions data import completed successfully."))
 
@@ -88,14 +88,14 @@ class Command(BaseCommand):
         restriction_code = line[4:6]
         sequence_no = line[6:10]
         out_ret = line[10:11]
-        date_from = line[11:15] #need to fix to get right year !
-        date_to = line[15:19] #need to fix to get right year !
+        date_from = line[11:15] 
+        date_to = line[15:19] 
         days_of_week = line[19:26]
         
         try:
-            time_restriction = TimeRestriction.objects.get(restriction__restriction_code=restriction_code, cf_mkr=cf_mkr, sequence_no=sequence_no) #now thinking the relationship should be the other way round.  as there are lots of locations in each time recrod code.
+            time_restriction = TimeRestriction.objects.get(restriction__restriction_code=restriction_code, cf_mkr=cf_mkr, sequence_no=sequence_no, out_ret=out_ret) #now thinking the relationship should be the other way round.  as there are lots of locations in each time recrod code.
             # TODO check out BRfares again
-
+            
             time_date_band, created = TimeRestrictionDateBand.objects.update_or_create(
                 time_restriction=time_restriction,
                 out_ret = out_ret,
@@ -107,9 +107,9 @@ class Command(BaseCommand):
             )
 
             if created:
-                self.stdout.write(self.style.SUCCESS(f"Created Date Band for Restriction {restriction_code}"))
+                self.stdout.write(self.style.SUCCESS(f"Created Date Band for Restriction {restriction_code} {time_date_band}"))
             else:
-                self.stdout.write(self.style.SUCCESS(f"Updated Date Band for Restriction {restriction_code}"))
+                self.stdout.write(self.style.SUCCESS(f"Updated Date Band for Restriction {restriction_code} {time_date_band.id}"))
 
         except Restriction.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Restriction {restriction_code} not found. Skipping date band record."))
@@ -192,13 +192,28 @@ class Command(BaseCommand):
             return None
 
     def _parse_short_date(self, date_str):
-        """Parses date from MMDD format to datetime.date or None"""
-        if date_str == '00000000' or not date_str.strip():  # Use '00000000' or empty for null dates
+        #Parses date from MMDD format to datetime.date or None
+        # needs to determine the year from the headline date bands in the records
+        # for now just using the manually determined start_date of the Cureent RD record - ie no parsing of QRD records happening.
+        # print(f'parsing date {date_str}')
+        if not date_str:  # empty for null dates
+            print('no date')
             return None
-        try:
-            return datetime.datetime.strptime(date_str, "%m%d").date()  #TODO need to interpret these in terms of the headline date bands in records "RD – Restriction Dates record"
-        except ValueError:
-            return None
+        dataset_current_date_str = "01092024"
+        dataset_current_date_obj = datetime.datetime.strptime(dataset_current_date_str, "%d%m%Y").date()
+        date_str = date_str + '2024'
+        # print(f'date_str {date_str}')
+
+        date = datetime.datetime.strptime(date_str, "%m%d%Y").date()
+        # print(f'date {date}')
+        
+        if date < dataset_current_date_obj:
+            date = date.replace(year = date.year + 1)
+
+        # print(f'about to return date {date}')    
+        # return date.strftime("%d%m%Y")
+        return date
+        
 
     def _parse_time(self, time_str):
         """Parses time from hhmm format to datetime.time or None"""
