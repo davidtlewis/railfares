@@ -66,7 +66,7 @@ admin.site.register(Route, RouteAdmin)
 class RestrictionDateBandInline(admin.TabularInline):
     model = RestrictionDateBand
     extra = 1  # Number of empty forms to display in the admin
-    fields = ['start_date', 'end_date']  # Fields to display in the inline
+    fields = ['date_from', 'date_to','days_of_week']  # Fields to display in the inline
 
 class TimeRestrictionDateBandInline(admin.TabularInline):
     model = TimeRestrictionDateBand
@@ -77,6 +77,7 @@ class TimeRestrictionInline(admin.TabularInline):
     model = TimeRestriction
     extra = 1
     fields = ['sequence_no', 'out_ret', 'time_from', 'time_to', 'arr_dep_via', 'location']
+    raw_id_fields = ('location',)  # Use raw_id_fields for foreign keys
 
 class TrainRestrictionInline(admin.TabularInline):
     model = TrainRestriction
@@ -86,14 +87,14 @@ class TrainRestrictionInline(admin.TabularInline):
 # Main Restriction admin configuration
 @admin.register(Restriction)
 class RestrictionAdmin(admin.ModelAdmin):
-    list_display = ['restriction_code', 'description']  # Fields to display in the main list
+    list_display = ['restriction_code', 'description','cf_mkr']  # Fields to display in the main list
     search_fields = ['restriction_code', 'description']  # Enable searching by these fields
     inlines = [RestrictionDateBandInline, TimeRestrictionInline,  TrainRestrictionInline]  # Attach inlines
 
 # Registering related models independently (optional)
 @admin.register(RestrictionDateBand)
 class RestrictionDateBandAdmin(admin.ModelAdmin):
-    list_display = ['restriction', 'start_date', 'end_date']
+    list_display = ['restriction','cf_mkr', 'date_from', 'date_to', 'days_of_week']  
     search_fields = ['restriction__restriction_code']
 
 @admin.register(TimeRestriction)

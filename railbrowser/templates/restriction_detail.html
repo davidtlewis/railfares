@@ -13,6 +13,33 @@
 <p><strong>Type In:</strong> {{ restriction.type_in }}</p>
 <p><strong>Change Indicator:</strong> {{ restriction.change_ind }}</p>
 
+<h2>Date Restrictions</h2>
+{% if date_restrictions %}
+<table>
+    <thead>
+        <tr>
+            <th>cf marker</th>
+            <th>Date From</th>
+            <th>Date To</th>
+            <th>Days of Week</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for date_restriction in date_restrictions %}
+        <tr>
+            <td>{{ date_restriction.cf_mkr }}</td>
+            <td>{{ date_restriction.date_from }}</td>
+            <td>{{ date_restriction.date_to }}</td>
+            <td>{{ date_restriction.days_of_week }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No Date Restrictions</p>
+{% endif %}
+
+
 <h2>Time Restrictions</h2>
 {% if time_restrictions %}
 <table>
@@ -31,6 +58,8 @@
         {% for time_restriction in time_restrictions %}
         <tr>
             <td>{{ time_restriction.sequence_no }}</td>
+            <td>{{ time_restriction.cf_mkr }}</td>
+
             <td>{{ time_restriction.get_out_ret_display }}</td>
             <td>{{ time_restriction.time_from }}</td>
             <td>{{ time_restriction.time_to }}</td>

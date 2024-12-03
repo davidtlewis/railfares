@@ -116,9 +116,13 @@ class Restriction(models.Model):
         return f"Restriction {self.restriction_code}"
 
 class RestrictionDateBand(models.Model):
-    restriction = models.ForeignKey(Restriction, on_delete=models.CASCADE, related_name="date_bands")
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
+    restriction = models.ForeignKey(Restriction, on_delete=models.CASCADE, related_name="date_restrictions")
+    cf_mkr = models.CharField(max_length=1, blank=True, null=True)
+
+    date_from = models.DateField(null=True, blank=True)
+    date_to  = models.DateField(null=True, blank=True)
+    days_of_week = models.CharField(max_length=7, null=True, blank=True)  # e.g., "MTWTFSS" for Mon-Sun
+
     
     def __str__(self):
         return f"Date Band for Restriction {self.restriction.restriction_code}"

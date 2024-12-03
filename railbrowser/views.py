@@ -309,8 +309,11 @@ def station_autocomplete(request):
 def restriction_detail_view(request, restriction_code):
     restriction = get_object_or_404(Restriction, restriction_code=restriction_code)
     time_restrictions = restriction.time_restrictions.all()
+    date_restrictions = restriction.date_restrictions.all()
+
     return render(request, 'restriction_detail.html', {
         'restriction': restriction,
         'time_restrictions': time_restrictions,
+        'date_restrictions': date_restrictions,	
     })
     

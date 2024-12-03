@@ -77,13 +77,12 @@ RRDF0203202531122999
 
 Current
 start_date 15 09 2024 - Probably when I downloaded the file
-end_date 01 03 2025 - ???
+end_date 01 03 2025 - 
 
 Future
 start_date 02 03 2025
 end_date 31 12 2999
 
 
-Perhaps this  is just bounding to interpret the date 0107  
-Or perhaps we should just ignore all future !
+
 

@@ -1,12 +1,12 @@
 import os
 import datetime
 from django.core.management.base import BaseCommand
-from railbrowser.models import Restriction, TimeRestrictionDateBand, TimeRestriction, TrainRestriction, Station
+from railbrowser.models import Restriction, TimeRestrictionDateBand, TimeRestriction, TrainRestriction, Station, RestrictionDateBand
 
 class Command(BaseCommand):
     help = "Imports restrictions data from flat files into the database"
-    # all a bit knackers as the sub rsstrictions are suposed to be lined to the retriction header by a _combination_ of cf_mkr AND restriction code
-    # but I don't undersatnd how it all fits together yet
+    # Need to make this paramter drive as order of import important.  ie RH forst , then TR and then TD !
+
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -14,9 +14,13 @@ class Command(BaseCommand):
             type=str,
             help="The path to the flat file containing restrictions data",
         )
+        parser.add_argument('--record-type', type=str, help='The type of records to import (e.g., RH, TR, TD, HD)')
+
 
     def handle(self, *args, **kwargs):
         file_path = kwargs['file_path']
+        record_type_filter = kwargs.get('record_type')
+
         if not os.path.exists(file_path):
             self.stdout.write(self.style.ERROR(f"File {file_path} does not exist."))
             return
@@ -29,24 +33,30 @@ class Command(BaseCommand):
                 if line.startswith("/"):  # Skip comments
                     continue
 
-                # try:
-                record_type = line[1:3].strip()  
-                # if record_type == 'RH':  # Primary restriction record
-                #     self._import_restriction(line)
-                
-                # elif record_type == 'TR':  # Time restriction record
-                #     self._import_time_restriction(line)
+                try:
+                    record_type = line[1:3].strip()
+                    if record_type_filter and record_type != record_type_filter:
+                        continue    # Skip this record if it doesn't match the filter
 
-                if record_type == 'TD':  # Time restriction Date band record # need to do this AFTER the TR records
-                    self._import_time_restriction_date_band(line)
+                    if record_type == 'RH':  # Primary restriction record
+                        self._import_restriction(line)
+                    
+                    elif  record_type == 'TR':  # Time restriction record
+                        self._import_time_restriction(line)
 
-                # elif record_type == 'X':  # Train restriction record
-                #     self._import_train_restriction(line)
-                # else:
-                #     self.stdout.write(self.style.WARNING(f"Unknown record type '{record_type}' on line {line_number}"))
+                    elif record_type == 'TD':  # Time restriction Date band record TODO Need to do this AFTER the TR records
+                        self._import_time_restriction_date_band(line)
 
-                # except Exception as e:
-                #     self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e} Line {line}"))
+                    elif record_type == 'HD':  # Restriction Date band record
+                        self._import_restriction_date_band(line)
+
+                    # elif record_type == 'X':  # Train restriction record
+                    #     self._import_train_restriction(line)
+                    # else:
+                    #     self.stdout.write(self.style.WARNING(f"Unknown record type '{record_type}' on line {line_number}"))
+
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"Error parsing line {line_number}: {e} Line {line}"))
 
         self.stdout.write(self.style.SUCCESS("Restrictions data import completed successfully."))
 
@@ -99,8 +109,35 @@ class Command(BaseCommand):
             time_date_band, created = TimeRestrictionDateBand.objects.update_or_create(
                 time_restriction=time_restriction,
                 out_ret = out_ret,
-                date_from=self._parse_short_date(date_from),
-                date_to=self._parse_short_date(date_to),
+                date_from=self._parse_short_date(cf_mkr,date_from),
+                date_to=self._parse_short_date(cf_mkr,date_to),
+                defaults={
+                    'days_of_week': days_of_week,
+                }
+            )
+
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Created Date Band for Restriction {restriction_code} {time_date_band}"))
+            else:
+                self.stdout.write(self.style.SUCCESS(f"Updated Date Band for Restriction {restriction_code} {time_date_band.id}"))
+
+        except Restriction.DoesNotExist:
+            self.stdout.write(self.style.ERROR(f"Restriction {restriction_code} not found. Skipping date band record."))
+
+    def _import_restriction_date_band(self, line):
+        """Parses and saves a RestrictionDateBand record"""
+        cf_mkr = line[3:4]
+        restriction_code = line[4:6]
+        date_from = line[6:10] 
+        date_to = line[10:14] 
+        days_of_week = line[14:21]
+        
+        try:
+            restriction = Restriction.objects.get(restriction_code=restriction_code, cf_mkr=cf_mkr)
+            time_date_band, created = RestrictionDateBand.objects.update_or_create(
+                restriction=restriction,
+                date_from=self._parse_short_date(cf_mkr,date_from),
+                date_to=self._parse_short_date(cf_mkr,date_to),
                 defaults={
                     'days_of_week': days_of_week,
                 }
@@ -191,27 +228,31 @@ class Command(BaseCommand):
         except ValueError:
             return None
 
-    def _parse_short_date(self, date_str):
+    def _parse_short_date(self, cf_mkr, date_str):
         #Parses date from MMDD format to datetime.date or None
         # needs to determine the year from the headline date bands in the records
-        # for now just using the manually determined start_date of the Cureent RD record - ie no parsing of QRD records happening.
-        # print(f'parsing date {date_str}')
+        # for now just using the manually determined start_date of the Currentand Furture  RD record - ie no parsing of QRD records happening.
         if not date_str:  # empty for null dates
             print('no date')
             return None
+        
         dataset_current_date_str = "01092024"
-        dataset_current_date_obj = datetime.datetime.strptime(dataset_current_date_str, "%d%m%Y").date()
-        date_str = date_str + '2024'
-        # print(f'date_str {date_str}')
+        dataset_future_date_str =  "02032025"
+        if cf_mkr == "C":
+            baseline_date_str = dataset_current_date_str
+        else:
+            baseline_date_str = dataset_future_date_str
+        
+        baseline_year = baseline_date_str[4:]
+        baseline_date_obj = datetime.datetime.strptime(baseline_date_str, "%d%m%Y").date()
 
+        date_str = date_str + baseline_year
+        # print(f'date_str {date_str}')
         date = datetime.datetime.strptime(date_str, "%m%d%Y").date()
         # print(f'date {date}')
-        
-        if date < dataset_current_date_obj:
+        if date < baseline_date_obj:
             date = date.replace(year = date.year + 1)
-
         # print(f'about to return date {date}')    
-        # return date.strftime("%d%m%Y")
         return date
         
 
