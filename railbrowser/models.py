@@ -126,6 +126,14 @@ class RestrictionDateBand(models.Model):
     
     def __str__(self):
         return f"Date Band for Restriction {self.restriction.restriction_code}"
+    
+class RestrictionRouteLocation(models.Model):
+    restriction = models.ForeignKey(Restriction, on_delete=models.CASCADE, related_name="route_restrictions")
+    cf_mkr = models.CharField(max_length=1, blank=True, null=True)
+    location = models.ForeignKey(Station, on_delete=models.CASCADE, related_name="restriction_locations", null=True, blank=True)
+    
+    def __str__(self):
+        return f"Route Location for Restriction {self.restriction.restriction_code} {self.station.name}"
 
 class TimeRestriction(models.Model):
     restriction = models.ForeignKey(Restriction, on_delete=models.CASCADE, related_name="time_restrictions")
@@ -150,6 +158,14 @@ class TimeRestrictionDateBand(models.Model):
 
     def __str__(self):
         return f"Time Restriction {self.date_from} to {self.date_to} for {self.time_restriction}"
+
+class TimeRestrictionTOC(models.Model):
+    time_restriction = models.ForeignKey(TimeRestriction, on_delete=models.CASCADE, related_name="tocs",blank=True, null=True)
+    toc_code = models.CharField(max_length=2,null=True, blank=True)
+
+    def __str__(self):
+        return f"TOC  Restriction {self.toc_code}  for {self.time_restriction}"
+
 
 class TrainRestriction(models.Model):
     restriction = models.ForeignKey(Restriction, on_delete=models.CASCADE, related_name="train_restrictions")

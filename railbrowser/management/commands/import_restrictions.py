@@ -1,12 +1,11 @@
 import os
 import datetime
 from django.core.management.base import BaseCommand
-from railbrowser.models import Restriction, TimeRestrictionDateBand, TimeRestriction, TrainRestriction, Station, RestrictionDateBand
+from railbrowser.models import Restriction, TimeRestrictionDateBand, TimeRestriction, TrainRestriction, Station, RestrictionDateBand,RestrictionRouteLocation, TimeRestrictionTOC
 
 class Command(BaseCommand):
     help = "Imports restrictions data from flat files into the database"
     # Need to make this paramter drive as order of import important.  ie RH forst , then TR and then TD !
-
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,7 +14,6 @@ class Command(BaseCommand):
             help="The path to the flat file containing restrictions data",
         )
         parser.add_argument('--record-type', type=str, help='The type of records to import (e.g., RH, TR, TD, HD)')
-
 
     def handle(self, *args, **kwargs):
         file_path = kwargs['file_path']
@@ -49,6 +47,12 @@ class Command(BaseCommand):
 
                     elif record_type == 'HD':  # Restriction Date band record
                         self._import_restriction_date_band(line)
+
+                    elif record_type == 'HL':  # Restriction Route Location record
+                        self._import_restriction_route_location(line)
+
+                    elif record_type == 'TT':  # Time Restriction TOC record
+                        self._import_time_restriction_toc(line)
 
                     # elif record_type == 'X':  # Train restriction record
                     #     self._import_train_restriction(line)
@@ -123,6 +127,32 @@ class Command(BaseCommand):
 
         except Restriction.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Restriction {restriction_code} not found. Skipping date band record."))
+
+    def _import_time_restriction_toc(self, line):
+        """Parses and saves a Time Restriction TOC record"""
+        cf_mkr = line[3:4]
+        restriction_code = line[4:6]
+        sequence_no = line[6:10]
+
+        out_ret = line[10:11]
+        toc_code = line[11:13]
+        
+        try:
+            time_restriction = TimeRestriction.objects.get(restriction__restriction_code=restriction_code, cf_mkr=cf_mkr, sequence_no=sequence_no, out_ret=out_ret) #now thinking the relationship should be the other way round.  as there are lots of locations in each time recrod code.
+            
+            time_date_band, created = TimeRestrictionTOC.objects.update_or_create(
+                time_restriction=time_restriction,
+                toc_code = toc_code,
+            )
+
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Created  Restriction {restriction_code} {time_date_band}"))
+            else:
+                self.stdout.write(self.style.SUCCESS(f"Updated Date Band for Restriction {restriction_code} {time_date_band.id}"))
+
+        except Restriction.DoesNotExist:
+            self.stdout.write(self.style.ERROR(f"Restriction {restriction_code} not found. Skipping date band record."))
+
 
     def _import_restriction_date_band(self, line):
         """Parses and saves a RestrictionDateBand record"""
@@ -218,6 +248,36 @@ class Command(BaseCommand):
 
         except Restriction.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Restriction {restriction_code} not found. Skipping train restriction record."))
+
+
+    def _import_restriction_route_location(self, line):
+        """Parses and saves a Restriction Route Location record"""
+        cf_mkr = line[3:4]
+        restriction_code = line[4:6]
+        location_crs_code = line[6:9]
+
+        try:
+            restriction = Restriction.objects.get(restriction_code=restriction_code, cf_mkr=cf_mkr)
+            if location_crs_code != "   ":
+                station= Station.objects.get(crs_code=location_crs_code)
+            else:
+                station = None
+
+            restriction_route_location, created = RestrictionRouteLocation.objects.update_or_create(
+                restriction=restriction,
+                train_id=train_id,
+                defaults={
+                    'location': station
+                }
+            )
+
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Created Restriction Route Location for {restriction_code}"))
+            else:
+                self.stdout.write(self.style.SUCCESS(f"Updated Restriction Route Location for {restriction_code}"))
+
+        except Restriction.DoesNotExist:
+            self.stdout.write(self.style.ERROR(f"Restriction {restriction_code} not found. Skipping Restriction Route Location record."))
 
     def _parse_date(self, date_str):
         """Parses date from ddmmyyyy format to datetime.date or None"""

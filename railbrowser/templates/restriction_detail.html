@@ -52,6 +52,7 @@
             <th>Arr/Dep/Via</th>
             <th>Location</th>
             <th>Date Bands</th>
+            <th>Limited to TOCs</th>
         </tr>
     </thead>
     <tbody>
@@ -88,6 +89,22 @@
                 {% else %}
                 <p>No Date Bands</p>
                 {% endif %}
+            </td>
+            <td>
+                {% if time_restriction.tocs.all %}
+                <ul>
+                    {% for toc in time_restriction.tocs.all %}
+                    <li>{{ toc.toc_code }}</li>
+                    {% endfor %}
+                </ul>
+
+
+
+                {% else %}
+                <p>No TOC onlys</p>
+                {% endif %}
+
+
             </td>
         </tr>
         {% endfor %}
